@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:id="@+id/main">
+
+    <View
+        android:id="@+id/view_header_bg"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:background="@drawable/bg_header_curve"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_logo_container"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="130dp"
+        app:cardCornerRadius="50dp"
+        app:cardElevation="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_app_logo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp"
+            android:src="@drawable/jata_malaysia"
+            tools:ignore="ContentDescription" />
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/tv_system_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/application_name"
+        android:gravity="center"
+        android:textColor="@color/text_header"
+        android:textSize="26sp"
+        android:fontFamily="sans-serif-black"
+        android:letterSpacing="0.05"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cv_logo_container"
+        app:layout_constraintWidth_percent="0.8"/>
+
+    <TextView
+        android:id="@+id/tv_instruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/startup_option_text"
+        android:textColor="@color/text_body"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_system_name" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_login_entrepreneur"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/startup_btn_text_one"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.02"
+        app:backgroundTint="@color/gov_orange_primary"
+        app:cornerRadius="8dp"
+        app:elevation="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_login_user"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.85" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_login_user"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="110dp"
+        android:text="@string/startup_btn_text_two"
+        android:textColor="@color/gov_orange_primary"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.02"
+
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/white"
+        app:strokeColor="@color/gov_orange_primary"
+        app:strokeWidth="2dp"
+
+
+        app:elevation="4dp"
+        app:pressedTranslationZ="4dp"
+        app:rippleColor="#33E65100"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.85" />
+
+    <TextView
+        android:id="@+id/tv_footer_copyright"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:text="@string/footer_text_with_app_version"
+        android:textAlignment="center"
+        android:textColor="@color/text_body"
+        android:textSize="12sp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
