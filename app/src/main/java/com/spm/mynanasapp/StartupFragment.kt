@@ -47,11 +47,6 @@ class StartupFragment : Fragment() {
         // Button : Entrepreneur
         val btnEntrepreneur = view.findViewById<Button>(R.id.btn_login_entrepreneur)
         btnEntrepreneur.setOnClickListener {
-            // Navigate to the Login Fragment
-//            parentFragmentManager.beginTransaction()
-//                .replace(R.id.fragment_container, FragmentLoginEntrepreneur())
-//                .addToBackStack(null)
-//                .commit()
             parentFragmentManager.beginTransaction()
                 .setCustomAnimations(
                     android.R.anim.fade_in,

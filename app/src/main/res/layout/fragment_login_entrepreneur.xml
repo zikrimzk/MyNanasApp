@@ -136,16 +136,37 @@
         app:layout_constraintTop_toBottomOf="@+id/cb_remember_me"
         app:layout_constraintWidth_percent="0.85" />
 
-    <TextView
-        android:id="@+id/tv_signup_prompt"
+    <LinearLayout
+        android:id="@+id/container_signup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:textColor="@color/text_body"
-        android:textSize="14sp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_do_login"
-        tools:text="Don't have an account? Sign Up"/>
+        app:layout_constraintTop_toBottomOf="@+id/btn_do_login">
+
+        <TextView
+            android:id="@+id/tv_signup_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Don't have an account? "
+            android:textColor="@color/text_body"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/tv_signup_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sign Up"
+            android:textColor="@color/gov_orange_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackground"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
