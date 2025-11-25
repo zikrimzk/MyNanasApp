@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-</resources>
+
+    <color name="gov_orange_primary">#E65100</color> <color name="gov_orange_accent">#EF6C00</color>  <color name="gov_bg_light">#FFF3E0</color>       <color name="text_header">#263238</color>        <color name="text_body">#546E7A</color>
+    <color name="govt_orange_primary">#E65100</color> <color name="govt_orange_accent">#FF9800</color>  <color name="bg_background">#F5F7FA</color>       <color name="text_primary">#1A237E</color>        <color name="text_secondary">#757575</color>      </resources>

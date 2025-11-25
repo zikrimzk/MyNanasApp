@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MyNanasApp</string>
+    <string name="application_name">MyNanas</string>
+    <string name="startup_option_text">Please choose your option:</string>
+    <string name="startup_btn_text_one">Log in as Entrepreneur</string>
+    <string name="startup_btn_text_two">Log in as User</string>
+    <string name="footer_text_with_app_version">© 2025 Lembaga Perindustrian Nenas Malaysia\nVersion 1.0.0</string>
 </resources>
