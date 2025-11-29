@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
+    <!-- ^^^ FIX: Ensures content starts below Status Bar & above Nav Bar -->
+
+    <!-- === 1. TOP TOOLBAR === -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbar_top"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Cancel"
+            android:textColor="#424242"
+            android:textSize="16sp"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_submit_post"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Post"
+            android:textSize="14sp"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:cornerRadius="18dp"
+            app:backgroundTint="@color/gov_orange_primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/divider_top"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_top"/>
+
+    <!-- === 2. SCROLLABLE CONTENT AREA === -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@+id/divider_top"
+        app:layout_constraintBottom_toTopOf="@+id/divider_bottom">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Avatar -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_avatar_placeholder"
+                        android:background="#F0F0F0"
+                        android:scaleType="centerCrop"/>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Input -->
+                <EditText
+                    android:id="@+id/et_caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@null"
+                    android:hint="Share your pineapple post now!"
+                    android:textColorHint="#9E9E9E"
+                    android:textSize="18sp"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:gravity="top|start"
+                    android:minLines="3"/>
+            </LinearLayout>
+
+            <!-- LOCATION PREVIEW -->
+            <LinearLayout
+                android:id="@+id/layout_location_preview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                android:layout_marginTop="12dp"
+                android:layout_marginStart="52dp"
+                android:background="@drawable/bg_floating_nav"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:elevation="2dp">
+                <!-- Using bg_floating_nav for a pill shape look -->
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_add_location"
+                    app:tint="@color/gov_orange_primary"/>
+
+                <TextView
+                    android:id="@+id/tv_selected_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="Kuala Lumpur, MY"
+                    android:textColor="@color/gov_orange_primary"
+                    android:textStyle="bold"
+                    android:textSize="13sp"/>
+
+                <ImageView
+                    android:id="@+id/btn_remove_location"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    app:tint="#757575"/>
+            </LinearLayout>
+
+            <!-- MEDIA PREVIEW (Horizontal Scroll) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_selected_media"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="52dp"
+                android:orientation="horizontal"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- === 3. BOTTOM TOOLBAR (Sticks to Keyboard) === -->
+    <View
+        android:id="@+id/divider_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0"
+        app:layout_constraintBottom_toTopOf="@+id/toolbar_bottom"/>
+
+    <LinearLayout
+        android:id="@+id/toolbar_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Add Image Button -->
+        <ImageView
+            android:id="@+id/btn_add_image"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_add_image"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gov_orange_primary"/>
+
+        <!-- Add Location Button -->
+        <ImageView
+            android:id="@+id/btn_add_location"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="24dp"
+            android:src="@drawable/ic_add_location"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gov_orange_primary"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

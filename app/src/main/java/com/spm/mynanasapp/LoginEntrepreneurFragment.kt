@@ -52,8 +52,18 @@ class FragmentLoginEntrepreneur : Fragment() {
 
         // Button : Login
         btnLogin.setOnClickListener {
-            // Here you will eventually get the text from et_username and et_password
-            Toast.makeText(context, "Logging in...", Toast.LENGTH_SHORT).show()
+
+            // Validation Logic
+
+            // Create an Intent to switch from the current Activity to the New Portal Activity
+            val intent =
+                android.content.Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
+
+            // Start the new Activity
+            startActivity(intent)
+
+            // Close the Login Activity
+            requireActivity().finish()
         }
 
         // Link : Forgot Password
