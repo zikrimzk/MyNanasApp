@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,7 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,33 +30,32 @@ import java.util.Locale
 
 class EntrepreneurFeedPostFragment : Fragment() {
 
-    // Data
+    // --- DATA ---
     private val selectedImageUris = mutableListOf<Uri>()
-    private lateinit var mediaAdapter: MediaPreviewAdapter
-
-    // Location Client
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocationString: String? = null
 
-    // UI References
-    private lateinit var locationPreview: LinearLayout
-    private lateinit var tvLocation: TextView
-    private lateinit var recyclerMedia: RecyclerView
+    // --- LOCATION CLIENT ---
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    // --- PERMISSION LAUNCHER ---
+    // --- UI REFERENCES ---
+    private lateinit var chipLocation: Chip
+    private lateinit var recyclerMedia: RecyclerView
+    private lateinit var mediaAdapter: MediaPreviewAdapter
+
+    // --- LAUNCHERS ---
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        when {
-            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                    permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                fetchCurrentLocation()
-            }
-            else -> Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+        val fineLocation = permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)
+        val coarseLocation = permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        if (fineLocation || coarseLocation) {
+            fetchCurrentLocation()
+        } else {
+            Toast.makeText(context, "Location permission needed", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // --- IMAGE PICKER LAUNCHER ---
     private val pickImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNotEmpty()) {
             selectedImageUris.addAll(uris)
@@ -65,6 +63,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
     }
 
+    // --- LIFECYCLE ---
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -77,17 +76,17 @@ class EntrepreneurFeedPostFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
+        // 1. Find Views
         val etCaption = view.findViewById<EditText>(R.id.et_caption)
-        val btnPost = view.findViewById<MaterialButton>(R.id.btn_submit_post)
-        val btnCancel = view.findViewById<TextView>(R.id.btn_cancel)
+        val btnShare = view.findViewById<TextView>(R.id.btn_submit_post)
+        val btnClose = view.findViewById<ImageView>(R.id.btn_close)
         val btnAddImage = view.findViewById<View>(R.id.btn_add_image)
         val btnAddLocation = view.findViewById<View>(R.id.btn_add_location)
-        val btnRemoveLocation = view.findViewById<View>(R.id.btn_remove_location)
 
-        locationPreview = view.findViewById(R.id.layout_location_preview)
-        tvLocation = view.findViewById(R.id.tv_selected_location)
+        chipLocation = view.findViewById(R.id.chip_location)
         recyclerMedia = view.findViewById(R.id.recycler_selected_media)
 
+        // 2. Setup Media RecyclerView
         mediaAdapter = MediaPreviewAdapter(selectedImageUris) { uriToRemove ->
             selectedImageUris.remove(uriToRemove)
             updateMediaPreview()
@@ -95,23 +94,24 @@ class EntrepreneurFeedPostFragment : Fragment() {
         recyclerMedia.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         recyclerMedia.adapter = mediaAdapter
 
-        // Keyboard Logic
+        // 3. Auto-Open Keyboard
         etCaption.requestFocus()
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(etCaption, InputMethodManager.SHOW_IMPLICIT)
 
-        btnCancel.setOnClickListener {
+        // 4. Click Listeners
+        btnClose.setOnClickListener {
             hideKeyboard()
             parentFragmentManager.popBackStack()
         }
 
-        btnPost.setOnClickListener {
+        btnShare.setOnClickListener {
             val caption = etCaption.text.toString()
             if (caption.isBlank() && selectedImageUris.isEmpty()) {
-                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please add a photo or text", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Posting...", Toast.LENGTH_SHORT).show()
-                // TODO: BACKEND - Send Data to API
+                Toast.makeText(context, "Sharing...", Toast.LENGTH_SHORT).show()
+                // TODO: BACKEND - Send to API
                 hideKeyboard()
                 parentFragmentManager.popBackStack()
             }
@@ -121,9 +121,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
             pickImagesLauncher.launch("image/*")
         }
 
-        // --- LOCATION CLICK ---
         btnAddLocation.setOnClickListener {
-            // Open the Bottom Modal
             val bottomSheet = LocationPickerBottomSheet { selectedCity ->
                 if (selectedCity == null) {
                     checkAndRequestLocation()
@@ -134,19 +132,18 @@ class EntrepreneurFeedPostFragment : Fragment() {
             bottomSheet.show(parentFragmentManager, "LocationPicker")
         }
 
-        btnRemoveLocation.setOnClickListener {
-            locationPreview.visibility = View.GONE
+        // 5. Handle Chip Close (Remove Location)
+        chipLocation.setOnCloseIconClickListener {
+            chipLocation.visibility = View.GONE
             currentLocationString = null
         }
     }
 
+    // --- LOCATION LOGIC ---
     private fun checkAndRequestLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
             locationPermissionRequest.launch(arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -165,6 +162,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
                         try {
                             val geocoder = Geocoder(requireContext(), Locale.getDefault())
                             val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+
                             withContext(Dispatchers.Main) {
                                 if (!addresses.isNullOrEmpty()) {
                                     val address = addresses[0]
@@ -180,20 +178,19 @@ class EntrepreneurFeedPostFragment : Fragment() {
                         }
                     }
                 } else {
-                    Toast.makeText(context, "Turn on GPS", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "GPS is off", Toast.LENGTH_SHORT).show()
                 }
             }
-        } catch (e: SecurityException) {
-            Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
-        }
+        } catch (e: SecurityException) { /* Handle error */ }
     }
 
     private fun setLocationUI(locationName: String) {
         currentLocationString = locationName
-        locationPreview.visibility = View.VISIBLE
-        tvLocation.text = currentLocationString
+        chipLocation.visibility = View.VISIBLE
+        chipLocation.text = currentLocationString
     }
 
+    // --- MEDIA LOGIC ---
     private fun updateMediaPreview() {
         if (selectedImageUris.isNotEmpty()) {
             recyclerMedia.visibility = View.VISIBLE
@@ -203,6 +200,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
     }
 
+    // --- KEYBOARD & NAV HANDLING ---
     override fun onResume() {
         super.onResume()
         requireActivity().findViewById<View>(R.id.bottom_nav_bar)?.visibility = View.GONE
@@ -221,23 +219,28 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
     }
 
+    // --- ADAPTER ---
     inner class MediaPreviewAdapter(
         private val uris: List<Uri>,
         private val onDelete: (Uri) -> Unit
     ) : RecyclerView.Adapter<MediaPreviewAdapter.MediaViewHolder>() {
+
         inner class MediaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val ivPreview: ImageView = itemView.findViewById(R.id.iv_preview)
-            val btnRemove: ImageView = itemView.findViewById(R.id.btn_remove_image)
+            val btnRemove: View = itemView.findViewById(R.id.btn_remove_image) // Using View to support FrameLayout
         }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_post_image_preview, parent, false)
             return MediaViewHolder(view)
         }
+
         override fun onBindViewHolder(holder: MediaViewHolder, position: Int) {
             val uri = uris[position]
-            holder.ivPreview.setImageURI(uri)
+            holder.ivPreview.setImageURI(uri) // TODO: Use Glide in production
             holder.btnRemove.setOnClickListener { onDelete(uri) }
         }
+
         override fun getItemCount() = uris.size
     }
 }

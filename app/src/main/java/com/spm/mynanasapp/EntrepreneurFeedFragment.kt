@@ -64,11 +64,12 @@ class EntrepreneurFeedFragment : Fragment() {
     private fun setupNavigation(view: View) {
         view.findViewById<View>(R.id.btn_add_post).setOnClickListener {
             parentFragmentManager.beginTransaction()
+                // (enter, exit, popEnter, popExit)
                 .setCustomAnimations(
-                    android.R.anim.fade_in,
-                    android.R.anim.fade_out,
-                    android.R.anim.fade_in,
-                    android.R.anim.fade_out
+                    R.anim.slide_in_up,
+                    R.anim.stay_still,
+                    R.anim.stay_still,
+                    R.anim.slide_out_down
                 )
                 .replace(R.id.nav_host_fragment, EntrepreneurFeedPostFragment())
                 .addToBackStack(null)
@@ -94,7 +95,7 @@ class EntrepreneurFeedFragment : Fragment() {
             postsList.add(
                 Post(1, "mof_malaysia", "Putrajaya, MY", "2h ago",
                     "Budget 2025 allocations for SME digitalization grants are now open for application.",
-                    listOf(android.R.drawable.ic_menu_gallery), "1.2k", 450)
+                    listOf(R.drawable.pineapple_1), "1.2k", 450)
             )
             postsList.add(
                 Post(2, "zikrimzk", null, "5h ago",
@@ -104,12 +105,12 @@ class EntrepreneurFeedFragment : Fragment() {
             postsList.add(
                 Post(3, "mynanas_official", "Kuala Lumpur", "1d ago",
                     "System maintenance scheduled for Sunday 2 AM to 4 AM.",
-                    listOf(android.R.drawable.ic_dialog_info), "3.1k", 120)
+                    listOf(R.drawable.pineapple_2), "3.1k", 120)
             )
             postsList.add(
                 Post(4, "awani501", "Johor Bahru", "2d ago",
                     "Breaking: New export incentives announced for agricultural sector.",
-                    listOf(android.R.drawable.ic_menu_camera, android.R.drawable.ic_menu_camera), "2.2k", 560)
+                    listOf(R.drawable.pineapple_1, R.drawable.pineapple_2), "2.2k", 560)
             )
 
             // CRITICAL: Tell the adapter the data changed so it refreshes the UI

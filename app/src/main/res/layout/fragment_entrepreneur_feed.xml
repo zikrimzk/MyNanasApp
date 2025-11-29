@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
@@ -9,24 +10,25 @@
     <View
         android:id="@+id/feed_header_bg"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
+        android:layout_height="90dp"
         android:background="@drawable/bg_header_curve"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tv_system_name_header"
+        android:id="@+id/tv_header_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginBottom="20dp"
-        android:text="@string/application_name"
+        android:text="Community"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:letterSpacing="0.02"
+        android:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="@+id/feed_header_bg"
-        app:layout_constraintStart_toStartOf="parent" />
-
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/feed_header_bg"
+        app:layout_constraintVertical_bias="0.65"/>
     <ImageButton
         android:id="@+id/btn_add_post"
         android:layout_width="48dp"
@@ -34,11 +36,12 @@
         android:layout_marginEnd="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_add_thin"
-        android:contentDescription="Add post button"
+        android:contentDescription="Create new post"
         app:tint="@color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_system_name_header"
+        android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_header_title"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tv_system_name_header" />
+        app:layout_constraintTop_toTopOf="@+id/tv_header_title" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh"
@@ -53,7 +56,43 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingTop="8dp"
-            android:paddingBottom="48dp" />
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            android:paddingBottom="80dp" /> </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_empty_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        tools:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/feed_header_bg">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@android:drawable/ic_menu_gallery"
+            app:tint="#E0E0E0"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="No posts yet"
+            android:textColor="#9E9E9E"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Be the first to share something!"
+            android:textColor="#BDBDBD"
+            android:textSize="14sp"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

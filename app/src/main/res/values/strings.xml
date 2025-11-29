@@ -7,4 +7,5 @@
     <string name="footer_text_with_app_version">© 2025 Lembaga Perindustrian Nenas Malaysia\nVersion 1.0.0</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="username_test">\@zikrimzk</string>
 </resources>

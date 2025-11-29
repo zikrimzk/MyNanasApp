@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#FAFAFA"
+    android:padding="32dp">
+
+    <ImageView
+        android:id="@+id/iv_placeholder_icon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_nav_products"
+        android:alpha="0.3"/>
+    <!-- Alpha makes it look like a watermark -->
+
+    <TextView
+        android:id="@+id/tv_placeholder_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#9E9E9E"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/tv_placeholder_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="When you share, it will appear here."
+        android:textSize="14sp"
+        android:textColor="#BDBDBD"
+        android:gravity="center"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>
