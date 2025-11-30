@@ -1,6 +1,7 @@
 package com.spm.mynanasapp
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
@@ -20,8 +21,18 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.spm.mynanasapp.data.model.request.LoginRequest
+import com.spm.mynanasapp.data.model.request.RegisterRequest
+import com.spm.mynanasapp.data.model.response.BaseResponse
+import com.spm.mynanasapp.data.model.response.LoginResponse
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 // TODO: Rename parameter arguments, choose names that match
@@ -69,10 +80,151 @@ class SignUpEntrepreneurFragment : Fragment() {
         setupPasswordLogic(view)
         setupLoginLink(view)
 
-        // BUTTON : REGISTER ENTREPRENEUR
-        view.findViewById<Button>(R.id.ent_btn_register).setOnClickListener {
-            Toast.makeText(context, "Registering...", Toast.LENGTH_SHORT).show()
+        // Initialization Views
+        val toggleGroup = view.findViewById<MaterialButtonToggleGroup>(R.id.ent_toggle_group_type)
+        val btnRegister = view.findViewById<Button>(R.id.ent_btn_register)
+
+        val etFullName = view.findViewById<EditText>(R.id.ent_et_fullname)
+        val etIC = view.findViewById<EditText>(R.id.ent_et_ic)
+        val etDOB = view.findViewById<EditText>(R.id.ent_et_dob)
+        val etPhone = view.findViewById<EditText>(R.id.ent_et_phone)
+        val etEmail = view.findViewById<EditText>(R.id.ent_et_email)
+        val etBusinessName = view.findViewById<EditText>(R.id.ent_et_business_name)
+        val etSSM = view.findViewById<EditText>(R.id.ent_et_ssm)
+        val etUsername = view.findViewById<EditText>(R.id.ent_et_username)
+        val etPassword = view.findViewById<EditText>(R.id.ent_et_password)
+        val etConfirmPassword = view.findViewById<EditText>(R.id.ent_et_confirm_password)
+
+        btnRegister.setOnClickListener {
+            if (isFieldEmpty(etFullName, "Full Name")) return@setOnClickListener
+            if (isFieldEmpty(etIC, "IC Number")) return@setOnClickListener
+            if (isFieldEmpty(etDOB, "Date of Birth")) return@setOnClickListener
+            if (isFieldEmpty(etPhone, "Phone Number")) return@setOnClickListener
+            if (isFieldEmpty(etEmail, "Email Address")) return@setOnClickListener
+            if (toggleGroup.checkedButtonId == R.id.ent_btn_type_company) {
+                if (isFieldEmpty(etBusinessName, "Business Name")) return@setOnClickListener
+                if (isFieldEmpty(etSSM, "SSM Number")) return@setOnClickListener
+            }
+            if (isFieldEmpty(etUsername, "Username")) return@setOnClickListener
+            if (isFieldEmpty(etPassword, "Password")) return@setOnClickListener
+            if (isFieldEmpty(etConfirmPassword, "Confirm Password")) return@setOnClickListener
+
+            if(etPassword.text.toString() != etConfirmPassword.text.toString()) {
+                etConfirmPassword.error = "Password does not match"
+                etConfirmPassword.requestFocus()
+                return@setOnClickListener
+            }
+
+            val fullName = etFullName.text.toString().trim()
+            val ic = etIC.text.toString().trim()
+            val rawDob = etDOB.text.toString().trim()
+            val dob = try {
+                val inputFormat = java.text.SimpleDateFormat("d/M/yyyy", java.util.Locale.US)
+                val outputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                val dateObj = inputFormat.parse(rawDob)
+                outputFormat.format(dateObj!!) // Result: "2003-07-23"
+            } catch (e: Exception) {
+                rawDob
+            }
+            val phone = etPhone.text.toString().trim()
+            val email = etEmail.text.toString().trim()
+            val businessName = etBusinessName.text.toString().trim()
+            val ssm = etSSM.text.toString().trim()
+            val username = etUsername.text.toString().trim()
+            val password = etPassword.text.toString().trim()
+
+            btnRegister.isEnabled = false
+            btnRegister.text = "Registering ..."
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val registerRequest = RegisterRequest(ent_fullname = fullName, ent_icNo = ic, ent_dob = dob, ent_phoneNo = phone, ent_email = email, ent_username = username, ent_password = password, ent_business_name = businessName, ent_business_ssmNo = ssm)
+
+                    val response = RetrofitClient.instance.register(registerRequest)
+
+                    if (response.isSuccessful && response.body() != null) {
+                        // === STATUS CODE 200 (Success) ===
+
+                        val baseResponse = response.body()!!
+
+                        // Check the Logical Status (from our BaseResponse)
+                        if (baseResponse.status) {
+
+                            // 1. Get Data
+                            val registerResult = baseResponse.data
+                            val user = registerResult;
+
+                            Toast.makeText(context, " Registered successfully, ${user?.ent_fullname}!", Toast.LENGTH_LONG).show()
+
+                            // 3. Navigate to login fragment
+//                            val intent = Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
+//                            startActivity(intent)
+//                            requireActivity().finish()
+                            val nextFragment = FragmentLoginEntrepreneur()
+
+                            parentFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, nextFragment) // <--- Change this ID to match your XML
+                                .addToBackStack(null) // Optional: Adds this transaction to the back button history
+                                .commit()
+
+                        } else {
+                            // API returned 200 OK, but logic failed (e.g. Account Locked)
+                            Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+                        }
+
+                    } else {
+                        // === STATUS CODE 401, 404, 500 (Error) ===
+                        val errorBody = response.errorBody()
+
+                        if (errorBody != null) {
+                            // CASE 1: Validation Error (422)
+                            if (response.code() == 422) {
+                                try {
+                                    val gson = Gson()
+                                    val type = object : TypeToken<LaravelValidationError>() {}.type
+                                    val errorResponse: LaravelValidationError = gson.fromJson(errorBody.charStream(), type)
+
+                                    // CALL THE HELPER FUNCTION HERE
+                                    handleBackendValidationErrors(errorResponse.errors, view)
+
+                                    Toast.makeText(context, "Please check the highlighted fields", Toast.LENGTH_SHORT).show()
+
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    Toast.makeText(context, "Validation failed", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            // CASE 2: Other Errors (401, 500, etc.)
+                            else {
+                                try {
+                                    // Try parsing as your standard BaseResponse if it's not a validation error
+                                    val gson = Gson()
+                                    val type = object : TypeToken<BaseResponse<Any>>() {}.type
+                                    val errorResponse: BaseResponse<Any> = gson.fromJson(errorBody.charStream(), type)
+                                    Toast.makeText(context, errorResponse.message, Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            Toast.makeText(context, "Unknown Error Occurred", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // === NETWORK ERROR (No Internet) ===
+                    Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    // Re-enable button
+                    btnRegister.isEnabled = true
+                    btnRegister.text = "Complete Registration"
+                }
+            }
         }
+
+//        // BUTTON : REGISTER ENTREPRENEUR
+//        view.findViewById<Button>(R.id.ent_btn_register).setOnClickListener {
+//            Toast.makeText(context, "Registering...", Toast.LENGTH_SHORT).show()
+//        }
     }
 
 
@@ -360,6 +512,56 @@ class SignUpEntrepreneurFragment : Fragment() {
 
         title?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(200)?.start()
         scrollContent?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(400)?.start()
+    }
+
+    private fun isFieldEmpty(editText: EditText, label: String): Boolean {
+        if (editText.text.toString().trim().isEmpty()) {
+            editText.error = "$label is required"
+            editText.requestFocus()
+            return true
+        }
+        return false
+    }
+
+    data class LaravelValidationError(
+        val message: String,
+        val errors: Map<String, List<String>> // dynamic map: "field_name" -> ["Error message"]
+    )
+
+    private fun handleBackendValidationErrors(errorMap: Map<String, List<String>>, view: View) {
+        // 1. Map Backend Field Names -> Android EditText IDs
+        val fieldMap = mapOf(
+            "ent_fullname" to view.findViewById<EditText>(R.id.ent_et_fullname),
+            "ent_icNo" to view.findViewById<EditText>(R.id.ent_et_ic),
+            "ent_dob" to view.findViewById<EditText>(R.id.ent_et_dob),
+            "ent_phoneNo" to view.findViewById<EditText>(R.id.ent_et_phone),
+            "ent_email" to view.findViewById<EditText>(R.id.ent_et_email),
+            "ent_username" to view.findViewById<EditText>(R.id.ent_et_username),
+            "ent_password" to view.findViewById<EditText>(R.id.ent_et_password),
+            "ent_business_name" to view.findViewById<EditText>(R.id.ent_et_business_name),
+            "ent_business_ssmNo" to view.findViewById<EditText>(R.id.ent_et_ssm)
+        )
+
+        var firstErrorView: View? = null
+
+        // 2. Iterate through the API errors
+        for ((fieldName, errorMessages) in errorMap) {
+            val editText = fieldMap[fieldName]
+
+            // If we found the EditText and there is an error message
+            if (editText != null && errorMessages.isNotEmpty()) {
+                // Set the error on the EditText (Android handles the red icon + message)
+                editText.error = errorMessages[0]
+
+                // Track the first field found so we can focus on it later
+                if (firstErrorView == null) {
+                    firstErrorView = editText
+                }
+            }
+        }
+
+        // 3. Scroll/Focus to the first error found
+        firstErrorView?.requestFocus()
     }
 
     companion object {

@@ -1,13 +1,26 @@
 package com.spm.mynanasapp
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.spm.mynanasapp.data.network.RetrofitClient // Import your RetrofitClient
+import com.spm.mynanasapp.data.model.request.LoginRequest // Import your Request Model
+import com.spm.mynanasapp.data.model.response.BaseResponse
+import com.spm.mynanasapp.data.model.response.LoginResponse
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -46,24 +59,224 @@ class FragmentLoginEntrepreneur : Fragment() {
         animateEntrance(view)
 
         // Initialization Views
+        val cbRememberMe = view.findViewById<CheckBox>(R.id.cb_remember_me)
         val btnLogin = view.findViewById<Button>(R.id.btn_do_login)
         val tvForgotPassword = view.findViewById<TextView>(R.id.tv_forgot_password)
         val tvSignUpAction = view.findViewById<TextView>(R.id.tv_signup_action)
+        val etUsername = view.findViewById<EditText>(R.id.et_username)
+        val etPassword = view.findViewById<EditText>(R.id.et_password)
+
+        if (SessionManager.isRemembered(requireContext())) {
+//            etUsername.setText(SessionManager.getSavedUsername(requireContext()))
+//            etPassword.setText(SessionManager.getSavedPassword(requireContext()))
+//            cbRememberMe.isChecked = true
+            val username = SessionManager.getSavedUsername(requireContext())
+            val password = SessionManager.getSavedPassword(requireContext())
+
+            if (username != null && password != null) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val loginRequest = LoginRequest(ent_username = username, ent_password = password)
+
+                        val response = RetrofitClient.instance.login(loginRequest)
+
+                        if (response.isSuccessful && response.body() != null) {
+                            // === STATUS CODE 200 (Success) ===
+
+                            val baseResponse = response.body()!!
+
+                            // Check the Logical Status (from our BaseResponse)
+                            if (baseResponse.status) {
+
+                                // 1. Get Data
+                                val loginResult = baseResponse.data
+                                val token = loginResult?.token
+                                val user = loginResult?.user
+
+                                // 2. Save Token (SharedPreference inside SessionManager)
+                                if (token != null) {
+                                    // Ensure you have a Context here (requireContext())
+                                    SessionManager.saveAuthToken(requireContext(), token)
+                                    RetrofitClient.setToken(token)
+                                }
+
+                                if (user != null) {
+                                    SessionManager.saveUser(requireContext(), user)
+                                }
+
+                                Toast.makeText(context, "Successfully login, ${user?.ent_fullname}!", Toast.LENGTH_LONG).show()
+
+                                // 3. Navigate to Portal
+                                val intent = Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
+                                startActivity(intent)
+                                requireActivity().finish()
+
+                            } else {
+                                // API returned 200 OK, but logic failed (e.g. Account Locked)
+                                Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+                            }
+
+                        } else {
+                            // === STATUS CODE 401, 404, 500 (Error) ===
+                            // This is where "Invalid username or password" usually lands because of the 401 code
+
+                            val errorBody = response.errorBody()
+
+                            if (errorBody != null) {
+                                try {
+                                    // 1. Create Gson instance
+                                    val gson = Gson()
+
+                                    // 2. Tell Gson what type of class to look for
+                                    // We use BaseResponse<LoginResponse> to match the JSON structure
+                                    val type = object : TypeToken<BaseResponse<LoginResponse>>() {}.type
+
+                                    // 3. Convert the Raw Error Stream into your Object
+                                    val errorResponse: BaseResponse<LoginResponse>? = gson.fromJson(errorBody.charStream(), type)
+
+                                    // 4. Extract the clean message
+                                    val cleanMessage = errorResponse?.message ?: "Request Failed"
+
+                                    Toast.makeText(context, cleanMessage, Toast.LENGTH_SHORT).show()
+
+                                } catch (e: Exception) {
+                                    // Fallback: If JSON parsing fails, just show the error code
+                                    Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Toast.makeText(context, "Unknown Error Occurred", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // === NETWORK ERROR (No Internet) ===
+                        Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    } finally {
+                        // Re-enable button
+                        btnLogin.isEnabled = true
+                        btnLogin.text = "Login"
+                    }
+                }
+            }
+        }
 
         // Button : Login
         btnLogin.setOnClickListener {
+            val username = etUsername.text.toString().trim()
+            val password = etPassword.text.toString().trim()
 
             // Validation Logic
+            if (username.isEmpty()) {
+                etUsername.error = "Username is required"
+                etUsername.requestFocus()
+                return@setOnClickListener
+            }
+            if (password.isEmpty()) {
+                etPassword.error = "Password is required"
+                etPassword.requestFocus()
+                return@setOnClickListener
+            }
+
+            btnLogin.isEnabled = false
+            btnLogin.text = "Logging in..."
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val loginRequest = LoginRequest(ent_username = username, ent_password = password)
+
+                    val response = RetrofitClient.instance.login(loginRequest)
+
+                    if (response.isSuccessful && response.body() != null) {
+                        // === STATUS CODE 200 (Success) ===
+
+                        val baseResponse = response.body()!!
+
+                        // Check the Logical Status (from our BaseResponse)
+                        if (baseResponse.status) {
+
+                            // 1. Get Data
+                            val loginResult = baseResponse.data
+                            val token = loginResult?.token
+                            val user = loginResult?.user
+
+                            if (cbRememberMe.isChecked) {
+                                SessionManager.saveLoginCredentials(requireContext(), username, password)
+                            } else {
+                                SessionManager.clearLoginCredentials(requireContext())
+                            }
+
+                            // 2. Save Token (SharedPreference inside SessionManager)
+                            if (token != null) {
+                                // Ensure you have a Context here (requireContext())
+                                SessionManager.saveAuthToken(requireContext(), token)
+                                RetrofitClient.setToken(token)
+                            }
+
+                            if (user != null) {
+                                SessionManager.saveUser(requireContext(), user)
+                            }
+
+                            Toast.makeText(context, "Successfully login, ${user?.ent_fullname}!", Toast.LENGTH_LONG).show()
+
+                            // 3. Navigate to Portal
+                            val intent = Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
+                            startActivity(intent)
+                            requireActivity().finish()
+
+                        } else {
+                            // API returned 200 OK, but logic failed (e.g. Account Locked)
+                            Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+                        }
+
+                    } else {
+                        // === STATUS CODE 401, 404, 500 (Error) ===
+                        // This is where "Invalid username or password" usually lands because of the 401 code
+
+                        val errorBody = response.errorBody()
+
+                        if (errorBody != null) {
+                            try {
+                                // 1. Create Gson instance
+                                val gson = Gson()
+
+                                // 2. Tell Gson what type of class to look for
+                                // We use BaseResponse<LoginResponse> to match the JSON structure
+                                val type = object : TypeToken<BaseResponse<LoginResponse>>() {}.type
+
+                                // 3. Convert the Raw Error Stream into your Object
+                                val errorResponse: BaseResponse<LoginResponse>? = gson.fromJson(errorBody.charStream(), type)
+
+                                // 4. Extract the clean message
+                                val cleanMessage = errorResponse?.message ?: "Request Failed"
+
+                                Toast.makeText(context, cleanMessage, Toast.LENGTH_SHORT).show()
+
+                            } catch (e: Exception) {
+                                // Fallback: If JSON parsing fails, just show the error code
+                                Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Unknown Error Occurred", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // === NETWORK ERROR (No Internet) ===
+                    Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    // Re-enable button
+                    btnLogin.isEnabled = true
+                    btnLogin.text = "Login"
+                }
+            }
 
             // Create an Intent to switch from the current Activity to the New Portal Activity
-            val intent =
-                android.content.Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
-
-            // Start the new Activity
-            startActivity(intent)
-
-            // Close the Login Activity
-            requireActivity().finish()
+//            val intent =
+//                android.content.Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
+//
+//            // Start the new Activity
+//            startActivity(intent)
+//
+//            // Close the Login Activity
+//            requireActivity().finish()
         }
 
         // Link : Forgot Password
