@@ -141,5 +141,13 @@ class FeedAdapter(private val posts: List<Post>) : RecyclerView.Adapter<FeedAdap
         }
     }
 
+//    fun updateList(newPosts: List<Post>) {
+//        // You would typically use DiffUtil for better performance,
+//        // but for now, this simple method works.
+//        (posts as MutableList).clear()
+//        posts.addAll(newPosts)
+//        notifyDataSetChanged()
+//    }
+
     override fun getItemCount() = posts.size
 }

@@ -2,6 +2,7 @@ package com.spm.mynanasapp
 
 data class Post(
     val id: Int,
+    val type: String,
     val username: String,
     val location: String?,
     val timestamp: String,

@@ -82,6 +82,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
         val btnClose = view.findViewById<ImageView>(R.id.btn_close)
         val btnAddImage = view.findViewById<View>(R.id.btn_add_image)
         val btnAddLocation = view.findViewById<View>(R.id.btn_add_location)
+        val chipGroupType = view.findViewById<com.google.android.material.chip.ChipGroup>(R.id.chip_group_type)
 
         chipLocation = view.findViewById(R.id.chip_location)
         recyclerMedia = view.findViewById(R.id.recycler_selected_media)
@@ -105,17 +106,27 @@ class EntrepreneurFeedPostFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
+
         btnShare.setOnClickListener {
             val caption = etCaption.text.toString()
+
+            // Determine Post Type
+            val selectedChipId = chipGroupType.checkedChipId
+            val postType =
+                if (selectedChipId == R.id.chip_announcement) "Announcement" else "Community"
+
             if (caption.isBlank() && selectedImageUris.isEmpty()) {
-                Toast.makeText(context, "Please add a photo or text", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Sharing...", Toast.LENGTH_SHORT).show()
-                // TODO: BACKEND - Send to API
+                Toast.makeText(context, "Posting to $postType...", Toast.LENGTH_SHORT).show()
+
+                // TODO: BACKEND - Send 'postType', 'caption', 'selectedImageUris', 'currentLocationString'
+
                 hideKeyboard()
                 parentFragmentManager.popBackStack()
             }
         }
+
 
         btnAddImage.setOnClickListener {
             pickImagesLauncher.launch("image/*")
@@ -131,6 +142,8 @@ class EntrepreneurFeedPostFragment : Fragment() {
             }
             bottomSheet.show(parentFragmentManager, "LocationPicker")
         }
+
+
 
         // 5. Handle Chip Close (Remove Location)
         chipLocation.setOnCloseIconClickListener {
