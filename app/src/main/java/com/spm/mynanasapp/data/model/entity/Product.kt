@@ -7,7 +7,7 @@ data class Product(
     val product_qty: Int,
     val product_unit: String?,
     val product_price: Double, // Converted from decimal(10, 2)
-    val product_status: String,
+    val product_status: Int,
     val product_image: String?,
 
     // Foreign Keys

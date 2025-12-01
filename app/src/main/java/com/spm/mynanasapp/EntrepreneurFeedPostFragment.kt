@@ -23,10 +23,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.chip.Chip
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.FileUtils
+import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Locale
+import android.util.Log
 
 class EntrepreneurFeedPostFragment : Fragment() {
 
@@ -41,6 +49,8 @@ class EntrepreneurFeedPostFragment : Fragment() {
     private lateinit var chipLocation: Chip
     private lateinit var recyclerMedia: RecyclerView
     private lateinit var mediaAdapter: MediaPreviewAdapter
+    private lateinit var btnShare: TextView
+    private lateinit var progressBar: View
 
     // --- LAUNCHERS ---
     private val locationPermissionRequest = registerForActivityResult(
@@ -57,8 +67,48 @@ class EntrepreneurFeedPostFragment : Fragment() {
     }
 
     private val pickImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        if (uris.isNotEmpty()) {
-            selectedImageUris.addAll(uris)
+        if (uris.isEmpty()) return@registerForActivityResult
+
+        val maxFileSize = 10 * 1024 * 1024 // 10MB in bytes
+        val maxTotalImages = 4
+
+        // 1. Calculate how many slots are left
+        val currentCount = selectedImageUris.size
+        val slotsLeft = maxTotalImages - currentCount
+
+        if (slotsLeft <= 0) {
+            Toast.makeText(context, "Limit reached ($maxTotalImages images max)", Toast.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+
+        // 2. Slice the list if they picked too many (e.g., picked 5 but only 2 slots left)
+        val selectionToCheck = if (uris.size > slotsLeft) {
+            Toast.makeText(context, "Only first $slotsLeft images selected", Toast.LENGTH_SHORT).show()
+            uris.take(slotsLeft)
+        } else {
+            uris
+        }
+
+        // 3. Filter by Size
+        val validUris = mutableListOf<Uri>()
+        var sizeErrorOccurred = false
+
+        for (uri in selectionToCheck) {
+            val size = FileUtils.getFileSize(requireContext(), uri)
+            if (size <= maxFileSize) {
+                validUris.add(uri)
+            } else {
+                sizeErrorOccurred = true
+            }
+        }
+
+        if (sizeErrorOccurred) {
+            Toast.makeText(context, "Some images were skipped (Max 10MB)", Toast.LENGTH_LONG).show()
+        }
+
+        // 4. Update UI
+        if (validUris.isNotEmpty()) {
+            selectedImageUris.addAll(validUris)
             updateMediaPreview()
         }
     }
@@ -78,11 +128,13 @@ class EntrepreneurFeedPostFragment : Fragment() {
 
         // 1. Find Views
         val etCaption = view.findViewById<EditText>(R.id.et_caption)
-        val btnShare = view.findViewById<TextView>(R.id.btn_submit_post)
+//        val btnShare = view.findViewById<TextView>(R.id.btn_submit_post)
         val btnClose = view.findViewById<ImageView>(R.id.btn_close)
         val btnAddImage = view.findViewById<View>(R.id.btn_add_image)
         val btnAddLocation = view.findViewById<View>(R.id.btn_add_location)
         val chipGroupType = view.findViewById<com.google.android.material.chip.ChipGroup>(R.id.chip_group_type)
+        btnShare = view.findViewById(R.id.btn_submit_post)
+        progressBar = view.findViewById(R.id.progress_bar_loading)
 
         chipLocation = view.findViewById(R.id.chip_location)
         recyclerMedia = view.findViewById(R.id.recycler_selected_media)
@@ -107,29 +159,49 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
 
 
-        btnShare.setOnClickListener {
-            val caption = etCaption.text.toString()
-
-            // Determine Post Type
-            val selectedChipId = chipGroupType.checkedChipId
-            val postType =
-                if (selectedChipId == R.id.chip_announcement) "Announcement" else "Community"
-
-            if (caption.isBlank() && selectedImageUris.isEmpty()) {
-                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Posting to $postType...", Toast.LENGTH_SHORT).show()
-
-                // TODO: BACKEND - Send 'postType', 'caption', 'selectedImageUris', 'currentLocationString'
-
-                hideKeyboard()
-                parentFragmentManager.popBackStack()
-            }
-        }
+//        btnShare.setOnClickListener {
+//            val caption = etCaption.text.toString()
+//
+//            // Determine Post Type
+//            val selectedChipId = chipGroupType.checkedChipId
+//            val postType =
+//                if (selectedChipId == R.id.chip_announcement) "Announcement" else "Community"
+//
+//            if (caption.isBlank() && selectedImageUris.isEmpty()) {
+//                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
+//            } else {
+//                Toast.makeText(context, "Posting to $postType...", Toast.LENGTH_SHORT).show()
+//
+//                // TODO: BACKEND - Send 'postType', 'caption', 'selectedImageUris', 'currentLocationString'
+//
+//                hideKeyboard()
+//                parentFragmentManager.popBackStack()
+//            }
+//        }
 
 
         btnAddImage.setOnClickListener {
-            pickImagesLauncher.launch("image/*")
+//            pickImagesLauncher.launch("image/*")
+            if (selectedImageUris.size >= 4) {
+                Toast.makeText(context, "Maximum 4 images allowed", Toast.LENGTH_SHORT).show()
+            } else {
+                pickImagesLauncher.launch("image/*")
+            }
+        }
+
+        btnShare.setOnClickListener {
+            val caption = etCaption.text.toString()
+
+            // Get Post Type
+            val selectedChipId = chipGroupType.checkedChipId
+            val postType = if (selectedChipId == R.id.chip_announcement) "Announcement" else "Community"
+
+            if (caption.isBlank() && selectedImageUris.isEmpty()) {
+                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            uploadPost(caption, postType, currentLocationString)
         }
 
         btnAddLocation.setOnClickListener {
@@ -142,8 +214,6 @@ class EntrepreneurFeedPostFragment : Fragment() {
             }
             bottomSheet.show(parentFragmentManager, "LocationPicker")
         }
-
-
 
         // 5. Handle Chip Close (Remove Location)
         chipLocation.setOnCloseIconClickListener {
@@ -229,6 +299,100 @@ class EntrepreneurFeedPostFragment : Fragment() {
         if (view != null) {
             val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
+    private fun uploadPost(caption: String, postType: String, location: String?) {
+        // Show a loading indicator if you have one (optional)
+        // progressBar.visibility = View.VISIBLE
+        setLoading(true)
+
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val token = SessionManager.getToken(requireContext())
+
+                if (token == null) {
+                    Toast.makeText(context, "Session expired", Toast.LENGTH_SHORT).show()
+                    setLoading(false) // Reset if failed
+                    // Handle logout/redirect if needed
+                    return@launch
+                }
+
+                // 1. Prepare Text Data
+                val captionPart = caption.toRequestBody("text/plain".toMediaTypeOrNull())
+                val typePart = postType.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                val locationPart = if (!location.isNullOrEmpty()) {
+                    location.toRequestBody("text/plain".toMediaTypeOrNull())
+                } else null
+
+                // 2. Prepare Image Data
+                val imageParts = mutableListOf<MultipartBody.Part>()
+
+                selectedImageUris.forEach { uri ->
+                    val file = FileUtils.getFileFromUri(requireContext(), uri)
+                    if (file != null) {
+                        // Create request body for the file
+                        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                        // "post_images[]" matches the Laravel validation array
+                        val body = MultipartBody.Part.createFormData("post_images[]", file.name, requestFile)
+                        imageParts.add(body)
+                    }
+                }
+
+                // 3. Make the API Call
+                val response = RetrofitClient.instance.addPost(
+                    "Bearer $token",
+                    captionPart,
+                    typePart,
+                    locationPart,
+                    imageParts
+                )
+
+                // 4. Handle Response (Same logic as your performLogout)
+                if (response.isSuccessful) {
+                    val baseResponse = response.body()
+                    if (baseResponse != null && baseResponse.status) {
+                        Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+
+                        // Success! Close the screen
+                        hideKeyboard()
+                        parentFragmentManager.popBackStack()
+                    } else {
+                        val msg = baseResponse?.message ?: "Upload failed"
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        setLoading(false)
+                    }
+                } else {
+                    Log.e("UploadPost", "Server failed: ${response.code()}")
+                    val errorBody = response.errorBody()?.string()
+                    Toast.makeText(context, "Server Error: $errorBody", Toast.LENGTH_LONG).show()
+                    setLoading(false)
+                }
+
+            } catch (e: Exception) {
+                Log.e("UploadPost", "Network error: ${e.message}")
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                setLoading(false)
+            } finally {
+                // Hide loading indicator
+                // progressBar.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            progressBar.visibility = View.VISIBLE
+            btnShare.isEnabled = false  // <--- CRITICAL: Prevents double clicks
+            btnShare.alpha = 0.5f       // Optional: Dim the button so it looks disabled
+            btnShare.text = "Posting..."
+        } else {
+            progressBar.visibility = View.GONE
+            btnShare.isEnabled = true   // <--- Re-enable so they can try again if it failed
+            btnShare.alpha = 1.0f
+            btnShare.text = "Share"
         }
     }
 

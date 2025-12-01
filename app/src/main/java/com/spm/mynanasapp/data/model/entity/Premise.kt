@@ -9,7 +9,7 @@ data class Premise(
     val premise_city: String?, // Nullable field
     val premise_postcode: String?, // Nullable field
     val premise_landsize: String?, // Nullable field
-    val premise_status: String, // Default 1
+    val premise_status: Int, // Default 1
     val premise_coordinates: String?, // Nullable field
     val entID: Long, // Foreign Key
     val created_at: String,

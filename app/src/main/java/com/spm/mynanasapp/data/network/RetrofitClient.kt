@@ -8,7 +8,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     // 1. DEFINE YOUR URL
-    private const val BASE_URL = "http://192.168.0.5:8000/api/"
+//    private const val BASE_URL = "http://192.168.0.5:8000/api/"
+    private const val BASE_URL = "http://192.168.0.221/api/"
+    public const val SERVER_IMAGE_URL = "http://192.168.0.221/storage/"
+
 
     // 2. VARIABLE TO HOLD THE TOKEN
     // We store the token here so the Interceptor can read it
@@ -29,7 +32,7 @@ object RetrofitClient {
             val original = chain.request()
             val requestBuilder = original.newBuilder()
                 .addHeader("Accept", "application/json")
-                .addHeader("Content-Type", "application/json")
+//                .addHeader("Content-Type", "application/json")
 
             // === CRITICAL STEP: Add Bearer Token if it exists ===
             if (!authToken.isNullOrEmpty()) {

@@ -5,7 +5,7 @@ data class Post(
     val post_images: String?,
     val post_caption: String?,
     val post_location: String?,
-    val post_status: String,
+    val post_status: Int,
     val post_views_count: Int,
     val post_likes_count: Int,
     val post_type: String,
@@ -14,5 +14,7 @@ data class Post(
     val entID: Long,
 
     val created_at: String,
-    val updated_at: String
+    val updated_at: String,
+
+    val user: User
 )
