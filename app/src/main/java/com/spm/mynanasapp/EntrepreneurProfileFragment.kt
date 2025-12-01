@@ -1,20 +1,21 @@
 package com.spm.mynanasapp
 
+import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.spm.mynanasapp.data.network.RetrofitClient
@@ -30,10 +31,21 @@ class EntrepreneurProfileFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_entrepreneur_profile, container, false)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. Setup ViewPager and Tabs
+        setupTabs(view)
+
+        // 2. Initialize UI with Session Data
+        setupProfileData(view)
+
+        // 3. Setup Click Listeners (Search, Logout, Edit)
+        setupClickListeners(view)
+    }
+
+    private fun setupTabs(view: View) {
         val viewPager = view.findViewById<ViewPager2>(R.id.view_pager)
         val tabLayout = view.findViewById<TabLayout>(R.id.tab_layout)
 
@@ -45,35 +57,69 @@ class EntrepreneurProfileFragment : Fragment() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
                 0 -> {
-                    tab.text = "Posts" // Optional: Remove text if you only want icons
+                    // Posts Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_posts)
                 }
                 1 -> {
-                    tab.text = "Products"
+                    // Products Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_products)
                 }
                 2 -> {
-                    tab.text = "Farm"
+                    // Premise/Farm Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_farm)
                 }
             }
         }.attach()
+    }
 
-        // Value Initialization
+    @SuppressLint("SetTextI18n")
+    private fun setupProfileData(view: View) {
+        // Get User Session
         val currentUser = SessionManager.getUser(requireContext())
-        val tvUsername = view.findViewById<TextView>(R.id.tv_toolbar_usernames)
+
+        // Find Views (Based on new XML Layout)
+        val tvToolbarUsername = view.findViewById<TextView>(R.id.tv_toolbar_username)
         val tvFullName = view.findViewById<TextView>(R.id.tv_fullname)
-        val btnSetting = view.findViewById<ImageView>(R.id.btn_settings)
+        val tvBio = view.findViewById<TextView>(R.id.tv_bio)
 
-        tvUsername.text = "@" + currentUser?.ent_username
-        tvFullName.text = currentUser?.ent_fullname
+        // Stats Views
+        val tvStatPosts = view.findViewById<TextView>(R.id.tv_stat_posts)
+        val tvStatProducts = view.findViewById<TextView>(R.id.tv_stat_products)
+        val tvStatPineapples = view.findViewById<TextView>(R.id.tv_stat_pineapples)
 
-        btnSetting.setOnClickListener {
-            android.app.AlertDialog.Builder(requireContext())
+        // Populate Data
+        // If username is null, fallback to "Entrepreneur"
+        tvToolbarUsername.text = currentUser?.ent_username ?: "Entrepreneur"
+        tvFullName.text = currentUser?.ent_fullname ?: "MyNanas User"
+
+        // TODO: Populate these from API later
+        tvBio.text = "Premium Pineapple Supplier in Johor 🍍 | Export Quality | DM for bulk orders."
+        tvStatPosts.text = "12"
+        tvStatProducts.text = "5"
+        tvStatPineapples.text = "850"
+    }
+
+    private fun setupClickListeners(view: View) {
+        val btnLogout = view.findViewById<ImageView>(R.id.btn_logout)
+        val btnSearch = view.findViewById<ImageView>(R.id.btn_search)
+        val btnEditProfile = view.findViewById<MaterialButton>(R.id.btn_edit_profile)
+
+        // Search Action
+        btnSearch.setOnClickListener {
+            Toast.makeText(context, "Search Feature Coming Soon", Toast.LENGTH_SHORT).show()
+        }
+
+        // Edit Profile Action
+        btnEditProfile.setOnClickListener {
+            Toast.makeText(context, "Edit Profile Clicked", Toast.LENGTH_SHORT).show()
+        }
+
+        // Logout Action
+        btnLogout.setOnClickListener {
+            AlertDialog.Builder(requireContext())
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to log out?")
                 .setPositiveButton("Yes") { _, _ ->
-                    // 2. Perform Logout Logic
                     performLogout()
                 }
                 .setNegativeButton("Cancel", null)
@@ -82,126 +128,59 @@ class EntrepreneurProfileFragment : Fragment() {
     }
 
     // --- INNER ADAPTER FOR TABS ---
-    // This switches the content at the bottom based on the tab selected
-    inner class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
         override fun getItemCount(): Int = 3
 
         override fun createFragment(position: Int): Fragment {
-            // In a real app, you would return specific fragments:
-            // 0 -> ProfilePostsFragment()
-            // 1 -> ProfileProductsFragment()
-            // 2 -> ProfileFarmFragment()
-
-            // For now, we return a reusable Placeholder Fragment
-            return PlaceholderTabFragment.newInstance(position)
+            return when (position) {
+                0 -> ProfilePostsFragment() // Show Real Posts Layout
+                else -> PlaceholderTabFragment.newInstance(position) // Show Empty for others
+            }
         }
     }
 
+    // --- LOGOUT LOGIC (Kept from your original code) ---
     private fun performLogout() {
-        // Show a loading state if you want (e.g., disable button)
-        // btnSetting.isEnabled = false
-
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // 1. Get the current token
                 val token = SessionManager.getToken(requireContext())
 
-                // If no token exists locally, just force clear and leave
                 if (token == null) {
                     clearSessionAndRedirect()
                     return@launch
                 }
 
-                // 2. Call the API
-                // Note: We manually add "Bearer " because your @Header parameter expects the full string
                 val response = RetrofitClient.instance.logout("Bearer $token")
 
                 if (response.isSuccessful) {
-                    // === STATUS 200 OK ===
                     val baseResponse = response.body()
-
-                    // Check the API "status" field (true/false)
                     if (baseResponse != null && baseResponse.status) {
-                        // Show the message from the server: "Logged out successfully"
                         Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
                     } else {
-                        // API connected, but logic failed (unlikely for logout, but good safety)
                         val msg = baseResponse?.message ?: "Logout failed"
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    // === STATUS 401, 500, etc ===
-                    // If token is expired (401), the server rejects it.
-                    // We just log it for debugging.
                     Log.e("Logout", "Server failed: ${response.code()}")
                 }
 
             } catch (e: Exception) {
-                // Network failure (No internet)
                 Log.e("Logout", "Network error: ${e.message}")
                 Toast.makeText(context, "Offline logout", Toast.LENGTH_SHORT).show()
             } finally {
-                // 3. CRITICAL: Always clear local session!
-                // Whether the server said "Success", "Error 500", or "No Internet",
-                // the user WANTS to leave. We must delete their local data.
                 clearSessionAndRedirect()
             }
         }
     }
 
     private fun clearSessionAndRedirect() {
-        // 1. Clear SharedPreferences
-        SessionManager.clearSession(requireContext()) // Ensure this clears User AND Token
-
-        // 2. Clear Retrofit Memory
+        SessionManager.clearSession(requireContext())
         RetrofitClient.setToken(null)
 
-        // 3. Navigate back to Main Activity
-        // 3. Navigate back to Main Activity
         val mainIntent = Intent(requireActivity(), MainActivity::class.java)
-        // Clear the back stack so pressing "Back" doesn't return to the portal
         mainIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(mainIntent)
         requireActivity().finish()
-    }
-}
-
-// --- PLACEHOLDER FRAGMENT CLASS ---
-// (Normally this would be in a separate file, but kept here for simplicity)
-class PlaceholderTabFragment : Fragment() {
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.item_tab_placeholder, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Customize text based on which tab we are in
-        val pos = arguments?.getInt("POS") ?: 0
-        val tvTitle = view.findViewById<TextView>(R.id.tv_placeholder_title)
-        val ivIcon = view.findViewById<ImageView>(R.id.iv_placeholder_icon)
-
-        when(pos) {
-            0 -> {
-                tvTitle.text = "No Posts Yet"
-                ivIcon.setImageResource(R.drawable.ic_tab_posts)
-            }
-            1 -> {
-                tvTitle.text = "No Products"
-                ivIcon.setImageResource(R.drawable.ic_tab_products)
-            }
-            2 -> {
-                tvTitle.text = "No Farm Data"
-                ivIcon.setImageResource(R.drawable.ic_tab_farm)
-            }
-        }
-    }
-
-    companion object {
-        fun newInstance(position: Int) = PlaceholderTabFragment().apply {
-            arguments = Bundle().apply { putInt("POS", position) }
-        }
     }
 }

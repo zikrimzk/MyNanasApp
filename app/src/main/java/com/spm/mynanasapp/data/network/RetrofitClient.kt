@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     // 1. DEFINE YOUR URL
-    private const val BASE_URL = "http://192.168.0.221/api/"
+    private const val BASE_URL = "http://192.168.0.5:8000/api/"
 
     // 2. VARIABLE TO HOLD THE TOKEN
     // We store the token here so the Interceptor can read it
