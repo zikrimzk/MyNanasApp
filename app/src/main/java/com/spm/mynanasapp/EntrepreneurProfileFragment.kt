@@ -45,6 +45,11 @@ class EntrepreneurProfileFragment : Fragment() {
         setupClickListeners(view)
     }
 
+    override fun onResume() {
+        super.onResume()
+        (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(true)
+    }
+
     private fun setupTabs(view: View) {
         val viewPager = view.findViewById<ViewPager2>(R.id.view_pager)
         val tabLayout = view.findViewById<TabLayout>(R.id.tab_layout)
@@ -60,10 +65,12 @@ class EntrepreneurProfileFragment : Fragment() {
                     // Posts Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_posts)
                 }
+
                 1 -> {
                     // Products Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_products)
                 }
+
                 2 -> {
                     // Premise/Farm Tab
                     tab.icon = requireContext().getDrawable(R.drawable.ic_tab_farm)
@@ -106,13 +113,27 @@ class EntrepreneurProfileFragment : Fragment() {
 
         // Search Action
         btnSearch.setOnClickListener {
-            Toast.makeText(context, "Search Feature Coming Soon", Toast.LENGTH_SHORT).show()
+            requireActivity().supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
+                .replace(R.id.nav_host_fragment, SearchEntrepreneurFragment())
+                .addToBackStack(null)
+                .commit()
         }
 
         // Edit Profile Action
         btnEditProfile.setOnClickListener {
-            Toast.makeText(context, "Edit Profile Clicked", Toast.LENGTH_SHORT).show()
+            requireActivity().supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.slide_in_up,
+                    R.anim.stay_still,
+                    R.anim.stay_still,
+                    R.anim.slide_out_down
+                )
+                .replace(R.id.nav_host_fragment, EntrepreneurEditProfileFragment())
+                .addToBackStack(null)
+                .commit()
         }
+
 
         // Logout Action
         btnLogout.setOnClickListener {
@@ -128,14 +149,15 @@ class EntrepreneurProfileFragment : Fragment() {
     }
 
     // --- INNER ADAPTER FOR TABS ---
-    class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
-
+    inner class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
         override fun getItemCount(): Int = 3
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> ProfilePostsFragment() // Show Real Posts Layout
-                else -> PlaceholderTabFragment.newInstance(position) // Show Empty for others
+                0 -> ProfilePostsFragment() // Your real posts
+                1 -> PlaceholderTabFragment.newInstance(1, isEditable = true) // SHOW BUTTON
+                2 -> ProfilePremiseFragment() // Your real premises
+                else -> PlaceholderTabFragment.newInstance(position, isEditable = true)
             }
         }
     }

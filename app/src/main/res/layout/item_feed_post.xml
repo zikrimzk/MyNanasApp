@@ -71,13 +71,20 @@
 
         <TextView
             android:id="@+id/tv_location"
-            android:layout_width="wrap_content"
+            android:layout_width="308dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            tools:text="Kuala Lumpur, MY"
+            android:layout_marginEnd="16dp"
+
+            android:drawablePadding="4dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+
             android:textColor="#757575"
             android:textSize="12sp"
             android:visibility="gone"
+            app:drawableTint="#757575"
+            tools:text="No. 123, Jalan Pineapple, Taman Buah-Buahan, 80000 Johor Bahru, Johor, Malaysia"
             tools:visibility="visible" />
     </LinearLayout>
 
@@ -180,7 +187,7 @@
     <View
         android:id="@+id/divider_post"
         android:layout_width="match_parent"
-        android:layout_height="8dp"
+        android:layout_height="1dp"
         android:background="#F0F2F5"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/btn_like_container"

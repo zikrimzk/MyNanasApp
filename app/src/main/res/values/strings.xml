@@ -19,4 +19,5 @@
     <string name="closeBtn_image_descr">close button for feed post fragment</string>
     <string name="user_role_in_profile">Entrepreneur</string>
     <string name="user_full_name_profile">User Fullname</string>
+    <string name="fragment_feed_title">Community</string>
 </resources>

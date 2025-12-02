@@ -200,7 +200,6 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
     }
 
-    // --- LOCATION LOGIC ---
     private fun checkAndRequestLocation() {
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -284,7 +283,6 @@ class EntrepreneurFeedPostFragment : Fragment() {
         // Show a loading indicator if you have one (optional)
         // progressBar.visibility = View.VISIBLE
         setLoading(true)
-
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {

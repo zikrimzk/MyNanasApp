@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="@color/white">
 
+    <!-- 1. PINNED BUTTON -->
     <LinearLayout
         android:id="@+id/container_pinned_button"
         android:layout_width="match_parent"
@@ -16,11 +17,11 @@
         android:elevation="2dp">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_create_post"
+            android:id="@+id/btn_add_premise"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="+ Create New Post"
+            android:text="+ Register New Premise"
             android:textColor="@color/gov_orange_primary"
             android:textStyle="bold"
             android:textSize="14sp"
@@ -30,19 +31,22 @@
             app:rippleColor="#33E65100"/>
     </LinearLayout>
 
+    <!-- 2. CONTENT AREA -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- A. LIST -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_profile_posts"
+            android:id="@+id/recycler_premises"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingBottom="80dp"/>
 
+        <!-- B. EMPTY STATE -->
         <include
-            android:id="@+id/layout_empty_placeholder"
+            android:id="@+id/layout_empty_view"
             layout="@layout/item_tab_placeholder"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

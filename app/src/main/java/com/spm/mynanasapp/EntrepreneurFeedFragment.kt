@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.tabs.TabLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.spm.mynanasapp.data.model.request.GetPostRequest
@@ -70,7 +71,7 @@ class EntrepreneurFeedFragment : Fragment() {
         swipeRefresh.setOnRefreshListener { loadPostsFromApi(currentFilterType) }
 
         // 3. Setup Filter Logic
-        setupFilterChips(view)
+        setupTabs(view)
 
         // 4. Setup Navigation
         view.findViewById<View>(R.id.btn_add_post).setOnClickListener {
@@ -86,23 +87,31 @@ class EntrepreneurFeedFragment : Fragment() {
         loadPostsFromApi("All")
     }
 
-    private fun setupFilterChips(view: View) {
-        val chipGroup = view.findViewById<ChipGroup>(R.id.chip_group_filter)
+    private fun setupTabs(view: View) {
+        val tabLayout = view.findViewById<TabLayout>(R.id.tab_layout_feed)
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_feed)
 
-        chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            if (checkedIds.isNotEmpty()) {
-                // When chip changes, update current type and CALL API
-                when (checkedIds[0]) {
-                    R.id.chip_all -> loadPostsFromApi("All")
-                    R.id.chip_announcement -> loadPostsFromApi("Announcement")
-                    R.id.chip_community -> loadPostsFromApi("Community")
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                // When tab changes, reload data with new filter
+                when (tab?.position) {
+                    0 -> loadPostsFromApi("All")
+                    1 -> loadPostsFromApi("Announcement")
+                    2 -> loadPostsFromApi("Community")
                 }
-            } else {
-                // Fallback if user unchecks a chip
-                loadPostsFromApi("All")
             }
-        }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+                // Do nothing
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+                // UX Feature: Scroll to top if user taps the active tab again (like Twitter/Insta)
+                recyclerView.smoothScrollToPosition(0)
+            }
+        })
     }
+
 
     private fun loadPostsFromApi(postType: String) {
         currentFilterType = postType // Save state for SwipeRefresh

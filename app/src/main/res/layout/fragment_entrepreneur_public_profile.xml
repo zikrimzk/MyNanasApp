@@ -24,49 +24,36 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="16dp">
+                android:paddingBottom="24dp"> <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:paddingHorizontal="16dp">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:paddingHorizontal="16dp">
+                <ImageView
+                    android:id="@+id/btn_back"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_menu_arrow"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
 
-                    <ImageView
-                        android:id="@+id/btn_search"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_header_search"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
+                <TextView
+                    android:id="@+id/tv_toolbar_username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="zikrimzk"
+                    android:textColor="#262626"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:drawablePadding="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
 
-                    <TextView
-                        android:id="@+id/tv_toolbar_username"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:drawableTint="@color/gov_orange_primary"
-                        tools:text="username"
-                        android:textColor="#262626"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:drawablePadding="4dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
-
-                    <ImageView
-                        android:id="@+id/btn_logout"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_header_logout"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -77,6 +64,7 @@
                     android:layout_marginTop="8dp">
 
                     <androidx.cardview.widget.CardView
+                        android:id="@+id/cv_profile_image"
                         android:layout_width="88dp"
                         android:layout_height="88dp"
                         app:cardCornerRadius="44dp"
@@ -177,7 +165,7 @@
                         android:id="@+id/tv_fullname"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/user_full_name_profile"
+                        tools:text="Zikri Mazlan"
                         android:textStyle="bold"
                         android:textSize="15sp"
                         android:textColor="#262626"/>
@@ -186,7 +174,7 @@
                         android:id="@+id/tv_category"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/user_role_in_profile"
+                        tools:text="Agricultural Entrepreneur"
                         android:textSize="13sp"
                         android:textColor="#9E9E9E"/>
 
@@ -194,34 +182,11 @@
                         android:id="@+id/tv_bio"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Premium Pineapple Supplier in Johor 🍍 | Export Quality | DM for bulk orders."
+                        tools:text="Premium Pineapple Supplier in Johor 🍍 | Export Quality | DM for bulk orders."
                         android:textSize="14sp"
                         android:textColor="#262626"
                         android:layout_marginTop="4dp"/>
                 </LinearLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_edit_profile"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="16dp"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="#262626"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-
-                    app:backgroundTint="#FAFAFA"
-                    app:strokeColor="#E0E0E0"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="8dp"
-                    app:elevation="0dp"
-
-                    android:clickable="true"
-                    android:focusable="true"
-
-                    app:rippleColor="#1A000000" />
 
             </LinearLayout>
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -249,7 +214,7 @@
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="80dp"
+        android:paddingBottom="0dp"
         android:clipToPadding="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 

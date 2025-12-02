@@ -81,4 +81,11 @@ class EntrepreneurPortalActivity : AppCompatActivity() {
             "profile" -> iconProfile.setColorFilter(orange)
         }
     }
+
+    fun setBottomNavVisibility(isVisible: Boolean) {
+        val bottomNav = findViewById<android.view.View>(R.id.bottom_nav_bar)
+        if (bottomNav != null) {
+            bottomNav.visibility = if (isVisible) android.view.View.VISIBLE else android.view.View.GONE
+        }
+    }
 }
