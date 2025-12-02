@@ -158,28 +158,6 @@ class EntrepreneurFeedPostFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-
-//        btnShare.setOnClickListener {
-//            val caption = etCaption.text.toString()
-//
-//            // Determine Post Type
-//            val selectedChipId = chipGroupType.checkedChipId
-//            val postType =
-//                if (selectedChipId == R.id.chip_announcement) "Announcement" else "Community"
-//
-//            if (caption.isBlank() && selectedImageUris.isEmpty()) {
-//                Toast.makeText(context, "Please share something!", Toast.LENGTH_SHORT).show()
-//            } else {
-//                Toast.makeText(context, "Posting to $postType...", Toast.LENGTH_SHORT).show()
-//
-//                // TODO: BACKEND - Send 'postType', 'caption', 'selectedImageUris', 'currentLocationString'
-//
-//                hideKeyboard()
-//                parentFragmentManager.popBackStack()
-//            }
-//        }
-
-
         btnAddImage.setOnClickListener {
 //            pickImagesLauncher.launch("image/*")
             if (selectedImageUris.size >= 4) {

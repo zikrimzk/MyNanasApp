@@ -151,7 +151,7 @@ class EntrepreneurFeedFragment : Fragment() {
                 }
 
                 // 1. Create Request with the specific type
-                val getPostRequest = GetPostRequest(post_type = postType)
+                val getPostRequest = GetPostRequest(post_type = postType, specific_user = null)
 
                 // 2. Call API
                 val response = RetrofitClient.instance.getPosts("Bearer $token", getPostRequest)

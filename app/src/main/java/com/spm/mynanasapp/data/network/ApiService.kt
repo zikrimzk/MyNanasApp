@@ -5,6 +5,7 @@ import com.spm.mynanasapp.data.model.entity.User
 import com.spm.mynanasapp.data.model.request.GetPostRequest
 import com.spm.mynanasapp.data.model.request.LoginRequest
 import com.spm.mynanasapp.data.model.request.RegisterRequest
+import com.spm.mynanasapp.data.model.request.UpdatePostRequest
 import com.spm.mynanasapp.data.model.response.BaseResponse
 import com.spm.mynanasapp.data.model.response.LoginResponse
 import okhttp3.MultipartBody
@@ -45,5 +46,8 @@ interface ApiService {
         @Part("post_location") location: RequestBody?, // Nullable
         @Part images: List<MultipartBody.Part> // The array of images
     ): Response<BaseResponse<Post>>
+
+    @POST("update_post")
+    suspend fun updatePost(@Header("Authorization") token: String, @Body request: UpdatePostRequest): Response<BaseResponse<Unit>>
     // == END: POST ==
 }
