@@ -82,6 +82,14 @@ class EntrepreneurFeedFragment : Fragment() {
                 .commit()
         }
 
+        view.findViewById<View>(R.id.cv_feed_avatar).setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
+                .replace(R.id.nav_host_fragment, EntrepreneurProfileFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         // 5. Load Data
         // Now this is safe to call because feedAdapter is initialized above
         loadPostsFromApi("All")
