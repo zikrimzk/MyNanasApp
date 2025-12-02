@@ -7,7 +7,10 @@ data class Post(
     val post_location: String?,
     val post_status: Int,
     val post_views_count: Int,
-    val post_likes_count: Int,
+
+    var post_likes_count: Int,
+    var is_liked: Boolean, // Ensure your Laravel API returns this field!
+
     val post_type: String,
 
     // Foreign Key

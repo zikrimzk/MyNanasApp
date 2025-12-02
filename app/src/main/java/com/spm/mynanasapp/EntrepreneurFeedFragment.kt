@@ -26,17 +26,12 @@ import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.launch
 import com.spm.mynanasapp.data.model.entity.Post
+import com.spm.mynanasapp.data.model.request.LikePostRequest
+import com.spm.mynanasapp.data.model.request.ViewPostRequest
 
 class EntrepreneurFeedFragment : Fragment() {
 
     private lateinit var feedAdapter: FeedAdapter
-
-//    // Master list holds ALL data fetched from API
-////    private val masterPostList = mutableListOf<Post>()
-//    private var masterPostList: List<Post> = emptyList()
-//
-//    // Display list is what the adapter shows (filtered)
-//    private var displayPostList = mutableListOf<Post>()
 
     // This is the SINGLE list that connects to the Recycler View
     private val postsForAdapter = mutableListOf<Post>()
@@ -59,7 +54,11 @@ class EntrepreneurFeedFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
 
         // Initialize the adapter with the list we defined at the top
-        feedAdapter = FeedAdapter(postsForAdapter)
+        feedAdapter = FeedAdapter(
+            posts = postsForAdapter,
+            onLikeClicked = { post -> togglePostLikeApi(post) },
+            onPostViewed = { post -> incrementViewCountApi(post) } // New Callback
+        )
 
         // Attach the adapter to the RecyclerView
         recyclerView.adapter = feedAdapter
@@ -104,31 +103,6 @@ class EntrepreneurFeedFragment : Fragment() {
             }
         }
     }
-
-//    private fun filterList(type: String) {
-//        displayPostList.clear()
-//
-//        if (type == "All") {
-//            displayPostList.addAll(masterPostList)
-//        } else {
-//            // Filter logic
-//            val filtered = masterPostList.filter { it.post_type == type }
-//            displayPostList.addAll(filtered)
-//        }
-//
-//        feedAdapter.notifyDataSetChanged()
-//
-//        // Handle Empty State
-//        val emptyState = view?.findViewById<View>(R.id.layout_empty_state)
-//        val tvEmpty = view?.findViewById<TextView>(R.id.tv_empty_title)
-//
-//        if (displayPostList.isEmpty()) {
-//            emptyState?.visibility = View.VISIBLE
-//            tvEmpty?.text = "No $type posts yet"
-//        } else {
-//            emptyState?.visibility = View.GONE
-//        }
-//    }
 
     private fun loadPostsFromApi(postType: String) {
         currentFilterType = postType // Save state for SwipeRefresh
@@ -196,6 +170,77 @@ class EntrepreneurFeedFragment : Fragment() {
                 // Stop the loading spinner
                 swipeRefresh?.isRefreshing = false
             }
+        }
+    }
+
+    private fun togglePostLikeApi(post: Post) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext())
+            if (token == null) return@launch
+
+            // We send the NEW state.
+            // If the user just clicked "Like", post.is_liked is now TRUE.
+            val request = LikePostRequest(
+                postID = post.postID,
+                is_liked = post.is_liked
+            )
+
+            try {
+                // Call the API defined in your ApiService
+                val response = RetrofitClient.instance.likePost("Bearer $token", request)
+
+                if (!response.isSuccessful || response.body()?.status == false) {
+                    // API FAILED
+                    revertLikeState(post)
+                    Toast.makeText(context, "Failed to update like", Toast.LENGTH_SHORT).show()
+                }
+                // If SUCCESS, do nothing. The UI is already correct from the Adapter.
+
+            } catch (e: Exception) {
+                // NETWORK ERROR
+                revertLikeState(post)
+                Log.e("FeedFragment", "Like Error", e)
+                Toast.makeText(context, "Connection error", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun incrementViewCountApi(post: Post) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext())
+            if (token == null) return@launch
+
+            val request = ViewPostRequest(postID = post.postID)
+
+            try {
+                // Fire and Forget
+                // We don't need to wait for the result or update the UI immediately
+                // The view count will update naturally the next time the user refreshes.
+                RetrofitClient.instance.viewPost("Bearer $token", request)
+            } catch (e: Exception) {
+                // Silent failure is okay for view counts.
+                // We don't want to annoy the user with Toasts for background stats.
+                Log.e("FeedFragment", "Failed to count view", e)
+            }
+        }
+    }
+
+    // Helper to revert UI if API fails
+    private fun revertLikeState(post: Post) {
+        // 1. Revert Boolean
+        post.is_liked = !post.is_liked
+
+        // 2. Revert Count
+        if (post.is_liked) {
+            post.post_likes_count += 1
+        } else {
+            post.post_likes_count = maxOf(0, post.post_likes_count - 1)
+        }
+
+        // 3. Find the index and notify adapter to refresh just that one item
+        val index = postsForAdapter.indexOfFirst { it.postID == post.postID }
+        if (index != -1) {
+            feedAdapter.notifyItemChanged(index)
         }
     }
 

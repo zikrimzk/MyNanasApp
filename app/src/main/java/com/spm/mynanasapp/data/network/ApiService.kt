@@ -3,9 +3,11 @@ package com.spm.mynanasapp.data.network
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.model.entity.User
 import com.spm.mynanasapp.data.model.request.GetPostRequest
+import com.spm.mynanasapp.data.model.request.LikePostRequest
 import com.spm.mynanasapp.data.model.request.LoginRequest
 import com.spm.mynanasapp.data.model.request.RegisterRequest
 import com.spm.mynanasapp.data.model.request.UpdatePostRequest
+import com.spm.mynanasapp.data.model.request.ViewPostRequest
 import com.spm.mynanasapp.data.model.response.BaseResponse
 import com.spm.mynanasapp.data.model.response.LoginResponse
 import okhttp3.MultipartBody
@@ -49,5 +51,14 @@ interface ApiService {
 
     @POST("update_post")
     suspend fun updatePost(@Header("Authorization") token: String, @Body request: UpdatePostRequest): Response<BaseResponse<Unit>>
+
+    @POST("like_post")
+    suspend fun likePost(@Header("Authorization") token: String, @Body request: LikePostRequest): Response<BaseResponse<Unit>>
+
+    @POST("view_post")
+    suspend fun viewPost(
+        @Header("Authorization") token: String,
+        @Body request: ViewPostRequest
+    ): Response<BaseResponse<Unit>>
     // == END: POST ==
 }

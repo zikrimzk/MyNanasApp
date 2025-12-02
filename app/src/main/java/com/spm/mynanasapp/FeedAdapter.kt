@@ -15,13 +15,15 @@ import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.TimeUtils
 
-class FeedAdapter(private val posts: List<Post>) : RecyclerView.Adapter<FeedAdapter.PostViewHolder>() {
+class FeedAdapter(
+    private val posts: List<Post>,
+    private val onLikeClicked: (Post) -> Unit, // Callback for the Fragment
+    private val onPostViewed: (Post) -> Unit
+) : RecyclerView.Adapter<FeedAdapter.PostViewHolder>() {
 
-    /**
-     * ViewHolder Pattern:
-     * Holds references to the UI elements to improve scrolling performance.
-     */
     private val SERVER_IMAGE_URL = RetrofitClient.SERVER_IMAGE_URL
+    // Helper to prevent spamming the API when scrolling up/down
+    private val viewedPostIds = HashSet<Long>()
 
     class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // Header Info
@@ -74,54 +76,6 @@ class FeedAdapter(private val posts: List<Post>) : RecyclerView.Adapter<FeedAdap
             // If no location provided, hide the view to keep the layout compact
             holder.tvLocation.visibility = View.GONE
         }
-
-        // ==========================================
-        // 3. MULTIPLE IMAGE RENDERING
-        // ==========================================
-        // TODO: FRONTEND - We use a HorizontalScrollView for simplicity.
-        // TODO: BACKEND - The 'images' field should be a List/Array of URLs (e.g., ["url1.jpg", "url2.jpg"])
-
-        // A. Clear previous views (Crucial because RecyclerView reuses layouts)
-//        holder.linearImagesLayout.removeAllViews()
-//
-//        if (!post.post_images.isNullOrEmpty()) {
-//            holder.scrollImagesContainer.visibility = View.VISIBLE
-//
-//            // Loop through the list of images and add them dynamically
-//            for (imageResId in post.post_images) {
-//
-//                // Create a CardView to hold the image (Gives us rounded corners)
-//                val cardWrapper = CardView(context)
-//                val cardParams = LinearLayout.LayoutParams(
-//                    (280 * context.resources.displayMetrics.density).toInt(), // Width: 280dp
-//                    (200 * context.resources.displayMetrics.density).toInt()  // Height: 200dp
-//                )
-//                cardParams.setMargins(0, 0, 24, 0) // Margin right between photos
-//                cardWrapper.layoutParams = cardParams
-//                cardWrapper.radius = 12 * context.resources.displayMetrics.density // Corner Radius: 12dp
-//                cardWrapper.cardElevation = 0f
-//
-//                // Create the ImageView
-//                val imageView = ImageView(context)
-//                imageView.layoutParams = ViewGroup.LayoutParams(
-//                    ViewGroup.LayoutParams.MATCH_PARENT,
-//                    ViewGroup.LayoutParams.MATCH_PARENT
-//                )
-//                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-//
-//                // TODO: IMAGE LOADING - Use Glide or Coil here
-//                // Example: Glide.with(context).load(imageUrl).into(imageView)
-////                imageView.setImageResource(imageResId) // Using dummy ID for now
-//
-//                // Add Image to Card, then Card to Layout
-//                cardWrapper.addView(imageView)
-//                holder.linearImagesLayout.addView(cardWrapper)
-//            }
-//
-//        } else {
-//            // Hide the scroll container if there are no images (Text-only post)
-//            holder.scrollImagesContainer.visibility = View.GONE
-//        }
 
         // ==========================================
         // 3. MULTIPLE IMAGE RENDERING (UPDATED)
@@ -191,27 +145,41 @@ class FeedAdapter(private val posts: List<Post>) : RecyclerView.Adapter<FeedAdap
         // ==========================================
         // Set visual state based on data (Grey Outline vs Orange Filled)
 //        holder.btnLike.isSelected = post.isLiked
-        holder.btnLike.isSelected = false
+        holder.btnLike.isSelected = post.is_liked
 
-//        holder.btnLikeContainer.setOnClickListener {
-//            // --- OPTIMISTIC UI UPDATE ---
-//            // Update the UI immediately so the user feels zero lag.
-//            post.isLiked = !post.isLiked
-//
-//            if (post.isLiked) {
-//                post.likes++
-//                // TODO: API - Fire a background POST request to /api/posts/{id}/like
-//            } else {
-//                post.likes--
-//                // TODO: API - Fire a background DELETE request to /api/posts/{id}/like
-//            }
-//
-//            // Update Text & Icon
-//            holder.tvLikes.text = post.likes.toString()
-//            holder.btnLike.isSelected = post.isLiked
-//
-//            // TODO: ERROR HANDLING - If the API call fails, revert these changes and show a Toast.
-//        }
+        holder.btnLikeContainer.setOnClickListener {
+
+            // 1. OPTIMISTIC UI UPDATE
+            // Flip the boolean
+            post.is_liked = !post.is_liked
+
+            // Update the count locally
+            if (post.is_liked) {
+                post.post_likes_count += 1
+            } else {
+                post.post_likes_count = maxOf(0, post.post_likes_count - 1)
+            }
+
+            // 2. Refresh the specific views immediately
+            holder.tvLikes.text = post.post_likes_count.toString()
+            holder.btnLike.isSelected = post.is_liked
+
+            // 3. Notify the Fragment to make the API call
+            onLikeClicked(post)
+        }
+
+        // ==========================================
+        // 5. VIEW COUNT LOGIC
+        // ==========================================
+        // Check if we have already counted this post in this session
+        if (!viewedPostIds.contains(post.postID)) {
+
+            // 1. Add to local set so we don't count it again immediately
+            viewedPostIds.add(post.postID)
+
+            // 2. Trigger the API call via Fragment
+            onPostViewed(post)
+        }
     }
 
 //    fun updateList(newPosts: List<Post>) {

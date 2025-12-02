@@ -11,3 +11,12 @@ data class UpdatePostRequest(
     val post_location: String?,
     val is_delete: Boolean
 )
+
+data class LikePostRequest(
+    val postID: Long,
+    val is_liked: Boolean
+)
+
+data class ViewPostRequest(
+    val postID: Long
+)

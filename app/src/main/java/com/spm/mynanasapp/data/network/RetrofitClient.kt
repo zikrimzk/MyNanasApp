@@ -9,8 +9,11 @@ object RetrofitClient {
 
     // 1. DEFINE YOUR URL
 //    private const val BASE_URL = "http://192.168.0.5:8000/api/"
-    private const val BASE_URL = "http://10.131.79.163/api/"
-    public const val SERVER_IMAGE_URL = "http://10.131.79.163/storage/"
+    private const val BASE_URL = "http://192.168.0.221:80"
+
+    private const val API_URL = BASE_URL + "/api/"
+
+    public const val SERVER_IMAGE_URL = BASE_URL + "/storage/"
 
 
     // 2. VARIABLE TO HOLD THE TOKEN
@@ -47,7 +50,7 @@ object RetrofitClient {
     // 3. Create the Retrofit Instance
     val instance: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(API_URL)
             .addConverterFactory(GsonConverterFactory.create()) // Converts JSON to your Objects
             .client(httpClient)
             .build()
