@@ -15,20 +15,26 @@ import com.google.gson.reflect.TypeToken
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.TimeUtils
+import kotlin.math.max
 
 class ProfilePostsAdapter(
     private val posts: MutableList<Post>,
     private val onEditClick: (Post) -> Unit,
-    private val onDeleteClick: (Post) -> Unit
+    private val onDeleteClick: (Post) -> Unit,
+    private val onLikeClick: (Post) -> Unit,
+    private val onViewPost: (Post) -> Unit
 ) : RecyclerView.Adapter<ProfilePostsAdapter.ViewHolder>() {
 
     private val SERVER_IMAGE_URL = RetrofitClient.SERVER_IMAGE_URL
+    private val viewedPostIds = HashSet<Long>()
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvUsername: TextView = itemView.findViewById(R.id.tv_username)
         val tvTimestamp: TextView = itemView.findViewById(R.id.tv_timestamp)
         val tvLocation: TextView = itemView.findViewById(R.id.tv_location)
         val tvCaption: TextView = itemView.findViewById(R.id.tv_caption)
+        val tvAvatar: ImageView = itemView.findViewById(R.id.iv_avatar)
+
 
         val scrollImagesContainer: View = itemView.findViewById(R.id.scroll_images_container)
         val linearImagesLayout: LinearLayout = itemView.findViewById(R.id.layout_images_linear)
@@ -56,6 +62,19 @@ class ProfilePostsAdapter(
         holder.tvViews.text = "${post.post_views_count} views"
         holder.tvLikes.text = post.post_likes_count.toString()
 
+        if (!post.user.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + post.user.ent_profilePhoto
+            Glide.with(context)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(holder.tvAvatar)
+        } else {
+            Glide.with(context)
+                .load(R.drawable.ic_avatar_placeholder)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(holder.tvAvatar)
+        }
+
         // Location Logic
         if (!post.post_location.isNullOrEmpty()) {
             holder.tvLocation.visibility = View.VISIBLE
@@ -63,29 +82,6 @@ class ProfilePostsAdapter(
         } else {
             holder.tvLocation.visibility = View.GONE
         }
-
-//        // Image Logic (Simplified for brevity)
-//        holder.linearImagesLayout.removeAllViews()
-//        if (!post.images.isNullOrEmpty()) {
-//            holder.scrollImagesContainer.visibility = View.VISIBLE
-//            // ... (Insert Image rendering code from FeedAdapter here) ...
-//            // Ideally, extract image rendering to a Helper function to avoid code duplication
-//            for (imageResId in post.images) {
-//                val imageView = ImageView(context)
-//                val params = LinearLayout.LayoutParams(
-//                    (280 * context.resources.displayMetrics.density).toInt(),
-//                    (200 * context.resources.displayMetrics.density).toInt()
-//                )
-//                params.setMargins(0, 0, 24, 0)
-//                imageView.layoutParams = params
-//                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-//                imageView.setImageResource(imageResId)
-//                // You might want to wrap this in a CardView for rounded corners like FeedAdapter
-//                holder.linearImagesLayout.addView(imageView)
-//            }
-//        } else {
-//            holder.scrollImagesContainer.visibility = View.GONE
-//        }
 
         // ==========================================
         // 3. MULTIPLE IMAGE RENDERING (UPDATED)
@@ -150,14 +146,40 @@ class ProfilePostsAdapter(
             holder.scrollImagesContainer.visibility = View.GONE
         }
 
-        // Like Logic
-        holder.btnLike.isSelected = false
-//        holder.btnLikeContainer.setOnClickListener {
-//            post.isLiked = !post.isLiked
-//            if (post.isLiked) post.likes++ else post.likes--
-//            holder.tvLikes.text = post.likes.toString()
-//            holder.btnLike.isSelected = post.isLiked
-//        }
+        // ==========================================
+        // 4. NEW: VIEW COUNT LOGIC
+        // ==========================================
+        holder.tvViews.text = "${post.post_views_count} views"
+
+        // Only count view if not already counted in this session
+        if (!viewedPostIds.contains(post.postID)) {
+            viewedPostIds.add(post.postID)
+            onViewPost(post)
+        }
+
+        // ==========================================
+        // 5. NEW: LIKE LOGIC
+        // ==========================================
+        holder.tvLikes.text = post.post_likes_count.toString()
+        holder.btnLike.isSelected = post.is_liked
+
+        holder.btnLikeContainer.setOnClickListener {
+            // Optimistic Update
+            post.is_liked = !post.is_liked
+
+            if (post.is_liked) {
+                post.post_likes_count += 1
+            } else {
+                post.post_likes_count = max(0, post.post_likes_count - 1)
+            }
+
+            // Update UI immediately
+            holder.tvLikes.text = post.post_likes_count.toString()
+            holder.btnLike.isSelected = post.is_liked
+
+            // Call API via callback
+            onLikeClick(post)
+        }
 
         // --- THE POPUP MENU (Three Dots) ---
         holder.btnMore.setOnClickListener { view ->

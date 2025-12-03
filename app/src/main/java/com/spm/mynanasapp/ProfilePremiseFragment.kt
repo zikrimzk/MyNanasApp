@@ -10,10 +10,17 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.gson.Gson
 import com.spm.mynanasapp.data.model.entity.Premise
+import com.spm.mynanasapp.data.model.request.GetPremiseRequest
+import com.spm.mynanasapp.data.model.request.UpdatePremiseRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class ProfilePremiseFragment : Fragment() {
 
@@ -32,18 +39,7 @@ class ProfilePremiseFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
 
         adapter = ProfilePremiseAdapter(premiseList,
-            onEdit = { premise ->
-                requireActivity().supportFragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
-                    .replace(R.id.nav_host_fragment, EntrepreneurEditPremiseFragment().apply {
-                        arguments = Bundle().apply {
-                            putLong("ID", premise.premiseID)
-                            // Pass other fields here to pre-fill real data
-                        }
-                    })
-                    .addToBackStack(null)
-                    .commit()
-            },
+            onEdit = { premise -> navigateToEdit(premise) },
             onDelete = { premise -> confirmDelete(premise) }
         )
         recyclerView.adapter = adapter
@@ -53,13 +49,92 @@ class ProfilePremiseFragment : Fragment() {
         btnAddPinned.setOnClickListener { navigateToRegister() }
 
         // 3. Load Data
-        loadData()
+        loadPremisesFromApi()
+    }
+
+    private fun loadPremisesFromApi() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            // Get All premises for specific user
+            val request = GetPremiseRequest(premise_type = "All", specific_user = true)
+
+            try {
+                val response = RetrofitClient.instance.getPremises("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val data = response.body()?.data ?: emptyList()
+                    premiseList.clear()
+                    premiseList.addAll(data)
+                    adapter.notifyDataSetChanged()
+                    checkEmptyState()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to load premises", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun confirmDelete(premise: Premise) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Premise")
+            .setMessage("Remove ${premise.premise_name}?")
+            .setPositiveButton("Delete") { _, _ -> deletePremiseApi(premise) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deletePremiseApi(premise: Premise) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            // Use Update Request with is_delete = true
+            val request = UpdatePremiseRequest(
+                premiseID = premise.premiseID,
+                premise_type = premise.premise_type,
+                premise_name = premise.premise_name,
+                premise_address = premise.premise_address,
+                premise_city = premise.premise_city,
+                premise_state = premise.premise_state,
+                premise_postcode = premise.premise_postcode,
+                premise_landsize = premise.premise_landsize,
+                is_delete = true
+            )
+
+            try {
+                val response = RetrofitClient.instance.updatePremise("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.status == true) {
+                    premiseList.remove(premise)
+                    adapter.notifyDataSetChanged()
+                    checkEmptyState()
+                    Toast.makeText(context, "Premise Deleted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error deleting", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun navigateToRegister() {
         requireActivity().supportFragmentManager.beginTransaction()
             .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
             .replace(R.id.nav_host_fragment, EntrepreneurRegisterPremiseFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun navigateToEdit(premise: Premise) {
+        // Serialize object to JSON to pass it cleanly
+        val premiseJson = Gson().toJson(premise)
+
+        requireActivity().supportFragmentManager.beginTransaction()
+            .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
+            .replace(R.id.nav_host_fragment, EntrepreneurEditPremiseFragment().apply {
+                arguments = Bundle().apply {
+                    putString("PREMISE_DATA", premiseJson)
+                }
+            })
             .addToBackStack(null)
             .commit()
     }
@@ -109,31 +184,13 @@ class ProfilePremiseFragment : Fragment() {
         checkEmptyState()
     }
 
-    private fun confirmDelete(premise: Premise) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Premise")
-            .setMessage("Remove ${premise.premise_name} from your list?")
-            .setPositiveButton("Delete") { _, _ ->
-                val index = premiseList.indexOf(premise)
-                if (index != -1) {
-                    premiseList.removeAt(index)
-                    adapter.notifyItemRemoved(index)
-
-                    // Re-check state after deletion
-                    checkEmptyState()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
     // --- THE EMPTY STATE LOGIC (Same as Post Fragment) ---
     private fun checkEmptyState() {
         if (!isAdded || view == null) return
 
         val containerPinned = view?.findViewById<View>(R.id.container_pinned_button)
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_premises)
-        val emptyLayout = view?.findViewById<View>(R.id.layout_empty_placeholder)
+        val emptyLayout = view?.findViewById<View>(R.id.layout_empty_view)
 
         if (premiseList.isEmpty()) {
             // === STATE: EMPTY ===

@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +14,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.spm.mynanasapp.data.model.response.BaseResponse
+import com.spm.mynanasapp.data.model.response.LoginResponse
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.FileUtils
 import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class EntrepreneurEditProfileFragment : Fragment() {
 
@@ -64,6 +78,15 @@ class EntrepreneurEditProfileFragment : Fragment() {
         etIc.setText(user?.ent_icNo ?: "")
         etDob.setText(user?.ent_dob ?: "")
 
+        // Load existing profile photo using Glide
+        if (!user?.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + user?.ent_profilePhoto
+            Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(ivProfile)
+        }
+
         // 3. Attach Phone Formatting Logic
         setupPhoneLogic(etPhone)
         // Ensure formatting applies to the loaded text too if needed
@@ -80,8 +103,13 @@ class EntrepreneurEditProfileFragment : Fragment() {
 
         btnSave.setOnClickListener {
             // TODO: API Call Update
-            Toast.makeText(context, "Profile Updated!", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
+//            Toast.makeText(context, "Profile Updated!", Toast.LENGTH_SHORT).show()
+//            parentFragmentManager.popBackStack()
+            updateProfile(
+                fullname = etFullname.text.toString(),
+                username = etUsername.text.toString(),
+                bio = etBio.text.toString()
+            )
         }
 
         btnChangePassword.setOnClickListener {
@@ -90,6 +118,87 @@ class EntrepreneurEditProfileFragment : Fragment() {
                 .replace(R.id.nav_host_fragment, EntrepreneurChangePasswordFragment())
                 .addToBackStack(null)
                 .commit()
+        }
+    }
+
+    private fun updateProfile(fullname: String, username: String, bio: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val context = requireContext()
+            val token = SessionManager.getToken(context)
+            if (token == null) {
+                Toast.makeText(context, "Session expired", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            // 1. Prepare Text Data (Convert String to RequestBody)
+            // We use "text/plain" so quotes aren't added to the database string
+            val rbFullname = fullname.toRequestBody("text/plain".toMediaTypeOrNull())
+            val rbUsername = username.toRequestBody("text/plain".toMediaTypeOrNull())
+            val rbBio = bio.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            // 2. Prepare Image Data (Convert Uri -> File -> MultipartBody.Part)
+            var bodyImage: MultipartBody.Part? = null
+
+            if (selectedImageUri != null) {
+                val file = FileUtils.getFileFromUri(context, selectedImageUri!!)
+                if (file != null) {
+                    val reqFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    // "ent_profilePhoto" must match the PHP $request->file('ent_profilePhoto')
+                    bodyImage = MultipartBody.Part.createFormData("ent_profilePhoto", file.name, reqFile)
+                }
+            }
+
+            try {
+                // 3. Call API
+                val response = RetrofitClient.instance.updateUserProfile(
+                    "Bearer $token",
+                    rbFullname,
+                    rbUsername,
+                    rbBio,
+                    bodyImage
+                )
+
+                if (response.isSuccessful && response.body() != null) {
+                    val baseResponse = response.body()!!
+
+                    if (baseResponse.status && baseResponse.data != null) {
+                        Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+
+                        // 4. IMPORTANT: Update Local Session with the new User Data
+                        // The API returns the updated user object. We save it so the app knows the new details.
+                        val updatedUser = baseResponse.data
+                        SessionManager.saveUser(context, updatedUser)
+
+                        // 5. Return to previous screen
+                        parentFragmentManager.popBackStack()
+                    } else {
+                        Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    handleError(response)
+                }
+
+            } catch (e: Exception) {
+                Log.e("EditProfile", "Error", e)
+                Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // ... [setupPhoneLogic remains the same] ...
+
+    // Generic error handler
+    private fun <T> handleError(response: retrofit2.Response<BaseResponse<T>>) {
+        val errorBody = response.errorBody()
+        if (errorBody != null) {
+            try {
+                val gson = Gson()
+                val type = object : TypeToken<BaseResponse<LoginResponse>>() {}.type
+                val errorResponse: BaseResponse<LoginResponse>? = gson.fromJson(errorBody.charStream(), type)
+                Toast.makeText(context, errorResponse?.message ?: "Request Failed", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

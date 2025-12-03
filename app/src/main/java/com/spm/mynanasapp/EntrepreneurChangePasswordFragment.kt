@@ -1,5 +1,6 @@
 package com.spm.mynanasapp
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
@@ -11,7 +12,16 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputEditText
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.spm.mynanasapp.data.model.request.ChangePasswordRequest
+import com.spm.mynanasapp.data.model.response.BaseResponse
+import com.spm.mynanasapp.data.model.response.LoginResponse
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class EntrepreneurChangePasswordFragment : Fragment() {
 
@@ -62,9 +72,79 @@ class EntrepreneurChangePasswordFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // TODO: API Call to Update Password
-            Toast.makeText(context, "Password Updated Successfully!", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
+            performChangePassword(currentPass, newPass)
+        }
+    }
+
+    private fun performChangePassword(currentPass: String, newPass: String) {
+        // Optional: Show loading dialog here
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext())
+            if (token == null) return@launch
+
+            val request = ChangePasswordRequest(
+                current_password = currentPass,
+                new_password = newPass
+            )
+
+            try {
+                val response = RetrofitClient.instance.changePassword("Bearer $token", request)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val baseResponse = response.body()!!
+
+                    if (baseResponse.status) {
+                        // === SUCCESS ===
+                        // 1. Show Success Message
+                        Toast.makeText(context, "Password changed! Please login again.", Toast.LENGTH_LONG).show()
+
+                        // 2. Perform Logout & Redirect
+                        performLogoutAndRedirect()
+
+                    } else {
+                        // Logic Error (e.g. Current password wrong, or New matches Old)
+                        Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    // API Error (401, 500)
+                    handleError(response)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performLogoutAndRedirect() {
+        // 1. Clear Local Session
+        SessionManager.clearSession(requireContext())
+        RetrofitClient.setToken(null)
+
+        // 2. Create Intent to LoginActivity (MainActivity)
+        val intent = Intent(requireActivity(), MainActivity::class.java)
+
+        // 3. Add Flags to clear the back stack
+        // This prevents the user from pressing "Back" and returning to the profile
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+        // 4. Start
+        startActivity(intent)
+        requireActivity().finish()
+    }
+
+    // Generic error handler
+    private fun <T> handleError(response: retrofit2.Response<BaseResponse<T>>) {
+        val errorBody = response.errorBody()
+        if (errorBody != null) {
+            try {
+                val gson = Gson()
+                val type = object : TypeToken<BaseResponse<LoginResponse>>() {}.type
+                val errorResponse: BaseResponse<LoginResponse>? = gson.fromJson(errorBody.charStream(), type)
+                Toast.makeText(context, errorResponse?.message ?: "Request Failed", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

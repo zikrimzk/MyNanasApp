@@ -12,10 +12,16 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.spm.mynanasapp.data.model.entity.Premise
+import com.spm.mynanasapp.data.model.request.UpdatePremiseRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 
 class EntrepreneurEditPremiseFragment : Fragment() {
@@ -31,6 +37,7 @@ class EntrepreneurEditPremiseFragment : Fragment() {
     private lateinit var tilPostcode: TextInputLayout
     private lateinit var containerLandSize: LinearLayout
     private lateinit var etLandSize: TextInputEditText
+    private var currentPremise: Premise? = null
 
     // Location Data
     private var stateList: List<StateItem> = emptyList()
@@ -42,16 +49,12 @@ class EntrepreneurEditPremiseFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            premiseId = it.getLong("ID")
+        arguments?.getString("PREMISE_DATA")?.let { json ->
+            currentPremise = Gson().fromJson(json, Premise::class.java)
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Ensure this matches your XML filename exactly
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_entrepreneur_edit_premise, container, false)
     }
 
@@ -85,9 +88,7 @@ class EntrepreneurEditPremiseFragment : Fragment() {
 
         btnSave.setOnClickListener {
             if (validateInput()) {
-                // TODO: API Call Update
-                Toast.makeText(context, "Premise Updated!", Toast.LENGTH_SHORT).show()
-                parentFragmentManager.popBackStack()
+                performUpdate(isDelete = false)
             }
         }
 
@@ -97,51 +98,72 @@ class EntrepreneurEditPremiseFragment : Fragment() {
     }
 
     private fun populateData() {
-        // --- MOCK DATA (Replace with real data passed via arguments or API) ---
-        // Simulating loading a "Farm"
-        val mockType = "Farm"
-        val mockName = "Mazlan Pineapple Valley"
-        val mockAddress = "Lot 45, Mukim Ayer Hitam"
-        val mockState = "Johor"
-        val mockCity = "Batu Pahat"
-        val mockPostcode = "86100"
-        val mockSize = "12"
+        val premise = currentPremise ?: return
 
-        // Set Fields
-        etType.setText(mockType) // Read-only field
-        etName.setText(mockName)
-        etAddress.setText(mockAddress)
+        etType.setText(premise.premise_type)
+        etName.setText(premise.premise_name)
+        etAddress.setText(premise.premise_address)
 
-        // Handle Conditional Logic based on Type
-        if (mockType.contains("Farm", ignoreCase = true)) {
+        if (premise.premise_type == "Farm") {
             containerLandSize.visibility = View.VISIBLE
-            etLandSize.setText(mockSize)
+            etLandSize.setText(premise.premise_landsize)
         } else {
             containerLandSize.visibility = View.GONE
         }
 
-        // Set Location (Note: We use setText(..., false) to avoid triggering filter)
-        actvState.setText(mockState, false)
-        actvCity.setText(mockCity, false)
-        actvPostcode.setText(mockPostcode, false)
+        // Set Locations (Use false to prevent auto-filter dropdown trigger)
+        actvState.setText(premise.premise_state, false)
+        actvCity.setText(premise.premise_city, false)
+        actvPostcode.setText(premise.premise_postcode, false)
 
-        // Enable dependent dropdowns since data exists
+        // Re-enable fields
         tilCity.isEnabled = true
         tilPostcode.isEnabled = true
+
+        // Try to find the objects in the list to enable correct dropdown behavior if user changes them
+        selectedState = stateList.find { it.name == premise.premise_state }
+        selectedCity = selectedState?.cityList?.find { it.name == premise.premise_city }
+    }
+
+    private fun performUpdate(isDelete: Boolean) {
+        val premise = currentPremise ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            val request = UpdatePremiseRequest(
+                premiseID = premise.premiseID,
+                premise_type = etType.text.toString(),
+                premise_name = etName.text.toString(),
+                premise_address = etAddress.text.toString(),
+                premise_state = actvState.text.toString(),
+                premise_city = actvCity.text.toString(),
+                premise_postcode = actvPostcode.text.toString(),
+                premise_landsize = if (containerLandSize.visibility == View.VISIBLE) etLandSize.text.toString() else null,
+                premise_coordinates = null,
+                is_delete = isDelete
+            )
+
+            try {
+                val response = RetrofitClient.instance.updatePremise("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val msg = if (isDelete) "Premise Deleted" else "Premise Updated"
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.popBackStack()
+                } else {
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun validateInput(): Boolean {
-        if (etName.text.isNullOrBlank()) {
-            Toast.makeText(context, "Please enter premise name", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (actvState.text.isNullOrBlank() || actvCity.text.isNullOrBlank()) {
-            Toast.makeText(context, "Please select complete location", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        // If it's a farm, land size is required
+        if (etName.text.isNullOrBlank()) return false
+        if (actvState.text.isNullOrBlank()) return false
         if (containerLandSize.visibility == View.VISIBLE && etLandSize.text.isNullOrBlank()) {
-            Toast.makeText(context, "Please enter land size", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Enter land size", Toast.LENGTH_SHORT).show()
             return false
         }
         return true
@@ -152,9 +174,7 @@ class EntrepreneurEditPremiseFragment : Fragment() {
             .setTitle("Delete Premise")
             .setMessage("Are you sure? This cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
-                // TODO: API Delete Call
-                Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
-                parentFragmentManager.popBackStack()
+                performUpdate(isDelete = true)
             }
             .setNegativeButton("Cancel", null)
             .show()

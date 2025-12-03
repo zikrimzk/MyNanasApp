@@ -2,6 +2,7 @@ package com.spm.mynanasapp
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,12 +21,15 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.model.request.GetPostRequest
+import com.spm.mynanasapp.data.model.request.LikePostRequest
 import com.spm.mynanasapp.data.model.request.UpdatePostRequest
+import com.spm.mynanasapp.data.model.request.ViewPostRequest
 import com.spm.mynanasapp.data.model.response.BaseResponse
 import com.spm.mynanasapp.data.model.response.LoginResponse
 import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 class ProfilePostsFragment : Fragment() {
 
@@ -47,9 +51,14 @@ class ProfilePostsFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_profile_posts)
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        adapter = ProfilePostsAdapter(postsForAdapter,
+        adapter = ProfilePostsAdapter(
+            posts = postsForAdapter,
             onEditClick = { post -> showEditDialog(post) },
-            onDeleteClick = { post -> confirmDelete(post) }
+            onDeleteClick = { post -> confirmDelete(post) },
+            // New: Like Logic
+            onLikeClick = { post -> togglePostLikeApi(post) },
+            // New: View Logic
+            onViewPost = { post -> incrementViewCountApi(post) }
         )
         recyclerView.adapter = adapter
 
@@ -197,6 +206,61 @@ class ProfilePostsFragment : Fragment() {
             }
         } else {
             loadPostsFromApi("All")
+        }
+    }
+
+    private fun togglePostLikeApi(post: Post) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            val request = LikePostRequest(
+                postID = post.postID,
+                is_liked = post.is_liked
+            )
+
+            try {
+                val response = RetrofitClient.instance.likePost("Bearer $token", request)
+
+                if (!response.isSuccessful || response.body()?.status == false) {
+                    // API Failed: Revert UI
+                    revertLikeState(post)
+                    Toast.makeText(context, "Failed to update like", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                // Network Error: Revert UI
+                revertLikeState(post)
+                Toast.makeText(context, "Connection error", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun revertLikeState(post: Post) {
+        // Revert data
+        post.is_liked = !post.is_liked
+        if (post.is_liked) {
+            post.post_likes_count += 1
+        } else {
+            post.post_likes_count = max(0, post.post_likes_count - 1)
+        }
+
+        // Notify Adapter
+        val index = postsForAdapter.indexOfFirst { it.postID == post.postID }
+        if (index != -1) {
+            adapter.notifyItemChanged(index)
+        }
+    }
+
+    private fun incrementViewCountApi(post: Post) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+            val request = ViewPostRequest(postID = post.postID)
+
+            try {
+                // Fire and forget - silent update
+                RetrofitClient.instance.viewPost("Bearer $token", request)
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "View count error", e)
+            }
         }
     }
 

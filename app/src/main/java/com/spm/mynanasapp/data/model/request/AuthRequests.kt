@@ -16,3 +16,8 @@ data class RegisterRequest(
     val ent_business_name: String? = null,
     val ent_business_ssmNo: String? = null
 )
+
+data class ChangePasswordRequest(
+    val current_password: String,
+    val new_password: String
+)

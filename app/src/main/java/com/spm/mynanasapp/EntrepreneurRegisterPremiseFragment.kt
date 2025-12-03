@@ -10,10 +10,15 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.spm.mynanasapp.data.model.request.AddPremiseRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 
 class EntrepreneurRegisterPremiseFragment : Fragment() {
@@ -46,6 +51,7 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
         val btnSave = view.findViewById<ImageView>(R.id.btn_save)
         val actvType = view.findViewById<AutoCompleteTextView>(R.id.actv_premise_type)
         val etName = view.findViewById<TextInputEditText>(R.id.et_premise_name)
+        val etAddress = view.findViewById<TextInputEditText>(R.id.et_address)
         val etLandSize = view.findViewById<TextInputEditText>(R.id.et_land_size)
 
         tilCity = view.findViewById(R.id.til_city)
@@ -74,12 +80,54 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
         // 4. Actions
         btnClose.setOnClickListener { parentFragmentManager.popBackStack() }
         btnSave.setOnClickListener {
-            if (etName.text.isNullOrBlank()) {
-                Toast.makeText(context, "Please enter name", Toast.LENGTH_SHORT).show()
+            val type = actvType.text.toString()
+            val name = etName.text.toString()
+            val address = etAddress.text.toString()
+            val state = actvState.text.toString()
+            val city = actvCity.text.toString()
+            val postcode = actvPostcode.text.toString()
+            val landsize = etLandSize.text.toString()
+
+            // Basic Validation
+            if (type.isEmpty() || name.isEmpty() || state.isEmpty()) {
+                Toast.makeText(context, "Please fill in required fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
+
+            performAddPremise(type, name, address, state, city, postcode, landsize)
+        }
+    }
+
+    private fun performAddPremise(
+        type: String, name: String, address: String,
+        state: String, city: String, postcode: String, landsize: String
+    ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            val request = AddPremiseRequest(
+                premise_type = type,
+                premise_name = name,
+                premise_address = address,
+                premise_city = city,
+                premise_state = state,
+                premise_postcode = postcode,
+                premise_landsize = if (type == "Farm") landsize else null,
+                premise_coordinates = null
+            )
+
+            try {
+                val response = RetrofitClient.instance.addPremise("Bearer $token", request)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    Toast.makeText(context, "Premise Added Successfully!", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.popBackStack()
+                } else {
+                    Toast.makeText(context, response.body()?.message ?: "Failed to add", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

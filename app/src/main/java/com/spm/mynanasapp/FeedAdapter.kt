@@ -30,6 +30,8 @@ class FeedAdapter(
         val tvUsername: TextView = itemView.findViewById(R.id.tv_username)
         val tvTime: TextView = itemView.findViewById(R.id.tv_timestamp)
         val tvLocation: TextView = itemView.findViewById(R.id.tv_location) // New Dynamic Field
+        val tvAvatar: ImageView = itemView.findViewById(R.id.iv_avatar)
+
 
         // Content
         val tvCaption: TextView = itemView.findViewById(R.id.tv_caption)
@@ -64,6 +66,19 @@ class FeedAdapter(
         holder.tvCaption.text = post.post_caption
         holder.tvViews.text = "${post.post_views_count} views"
         holder.tvLikes.text = post.post_likes_count.toString()
+
+        if (!post.user.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + post.user.ent_profilePhoto
+            Glide.with(context)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(holder.tvAvatar)
+        } else {
+            Glide.with(context)
+                .load(R.drawable.ic_avatar_placeholder)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(holder.tvAvatar)
+        }
 
         // ==========================================
         // 2. LOCATION LOGIC (Dynamic Visibility)

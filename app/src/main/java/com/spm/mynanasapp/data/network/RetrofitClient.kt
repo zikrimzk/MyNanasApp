@@ -9,7 +9,7 @@ object RetrofitClient {
 
     // 1. DEFINE YOUR URL
 //    private const val BASE_URL = "http://192.168.0.5:8000/api/"
-    private const val BASE_URL = "http://192.168.0.5:8000"
+    private const val BASE_URL = "http://192.168.0.221:80"
 
     private const val API_URL = BASE_URL + "/api/"
 

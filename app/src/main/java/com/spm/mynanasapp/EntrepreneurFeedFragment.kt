@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -15,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.bumptech.glide.Glide
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.tabs.TabLayout
 import com.google.gson.Gson
@@ -49,6 +51,8 @@ class EntrepreneurFeedFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        setupProfileData(view)
 
         // 1. Setup RecyclerView (FIXED HERE)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_feed)
@@ -93,6 +97,23 @@ class EntrepreneurFeedFragment : Fragment() {
         // 5. Load Data
         // Now this is safe to call because feedAdapter is initialized above
         loadPostsFromApi("All")
+    }
+
+    private fun setupProfileData(view: View) {
+        // Get User Session
+        val currentUser = SessionManager.getUser(requireContext())
+
+        // Find Views (Based on new XML Layout)
+        val ivHeaderAvatar = view.findViewById<ImageView>(R.id.iv_header_avatar)
+
+        // Populate Data
+        if (!currentUser?.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser?.ent_profilePhoto
+            Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(ivHeaderAvatar)
+        }
     }
 
     private fun setupTabs(view: View) {

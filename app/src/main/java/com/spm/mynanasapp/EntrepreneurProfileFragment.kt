@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -88,6 +89,7 @@ class EntrepreneurProfileFragment : Fragment() {
         val tvToolbarUsername = view.findViewById<TextView>(R.id.tv_toolbar_username)
         val tvFullName = view.findViewById<TextView>(R.id.tv_fullname)
         val tvBio = view.findViewById<TextView>(R.id.tv_bio)
+        val ivProfile = view.findViewById<ImageView>(R.id.iv_profile)
 
         // Stats Views
         val tvStatPosts = view.findViewById<TextView>(R.id.tv_stat_posts)
@@ -98,9 +100,16 @@ class EntrepreneurProfileFragment : Fragment() {
         // If username is null, fallback to "Entrepreneur"
         tvToolbarUsername.text = currentUser?.ent_username ?: "Entrepreneur"
         tvFullName.text = currentUser?.ent_fullname ?: "MyNanas User"
+        tvBio.text = currentUser?.ent_bio ?: ""
+        if (!currentUser?.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser?.ent_profilePhoto
+            Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .into(ivProfile)
+        }
 
         // TODO: Populate these from API later
-        tvBio.text = "Premium Pineapple Supplier in Johor 🍍 | Export Quality | DM for bulk orders."
         tvStatPosts.text = "12"
         tvStatProducts.text = "5"
         tvStatPineapples.text = "850"

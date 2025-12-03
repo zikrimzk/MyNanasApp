@@ -1,5 +1,7 @@
 package com.spm.mynanasapp.data.model.entity
 
+import java.io.Serializable
+
 data class Premise(
     val premiseID: Long,
     val premise_type: String,
@@ -14,4 +16,4 @@ data class Premise(
     val entID: Long, // Foreign Key
     val created_at: String,
     val updated_at: String
-)
+) : Serializable
