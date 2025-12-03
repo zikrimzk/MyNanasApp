@@ -10,10 +10,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.spm.mynanasapp.data.model.entity.Product
+import com.spm.mynanasapp.data.model.request.GetProductRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class ProfileProductFragment : Fragment() {
 
@@ -53,7 +58,32 @@ class ProfileProductFragment : Fragment() {
         btnAdd.setOnClickListener { navigateToAddProduct() }
 
         // 3. Load Data
-        loadData()
+        loadProductsFromApi()
+    }
+
+    private fun loadProductsFromApi() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            // Fetch Specific User's Products
+            val request = GetProductRequest(specific_user = true, )
+
+            try {
+                val response = RetrofitClient.instance.getProducts("Bearer $token", request)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val data = response.body()?.data ?: emptyList()
+                    productList.clear()
+                    productList.addAll(data)
+                    adapter.notifyDataSetChanged()
+                    checkEmptyState()
+                } else {
+                    Toast.makeText(context, "Failed to load products", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun navigateToAddProduct() {

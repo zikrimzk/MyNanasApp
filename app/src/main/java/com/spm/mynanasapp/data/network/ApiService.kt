@@ -2,11 +2,15 @@ package com.spm.mynanasapp.data.network
 
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.model.entity.Premise
+import com.spm.mynanasapp.data.model.entity.Product
+import com.spm.mynanasapp.data.model.entity.ProductCategory
 import com.spm.mynanasapp.data.model.entity.User
 import com.spm.mynanasapp.data.model.request.AddPremiseRequest
 import com.spm.mynanasapp.data.model.request.ChangePasswordRequest
 import com.spm.mynanasapp.data.model.request.GetPostRequest
 import com.spm.mynanasapp.data.model.request.GetPremiseRequest
+import com.spm.mynanasapp.data.model.request.GetProductRequest
+import com.spm.mynanasapp.data.model.request.GetUsersRequest
 import com.spm.mynanasapp.data.model.request.LikePostRequest
 import com.spm.mynanasapp.data.model.request.LoginRequest
 import com.spm.mynanasapp.data.model.request.RegisterRequest
@@ -56,6 +60,19 @@ interface ApiService {
         @Part("ent_bio") bio: RequestBody,
         @Part image: MultipartBody.Part? // Nullable, because user might not change photo
     ): Response<BaseResponse<User>>
+
+    @POST("get_users")
+    suspend fun getAllUsers(
+        @Header("Authorization") token: String,
+        @Body request: GetUsersRequest
+    ): Response<BaseResponse<List<User>>>
+
+    // 2. Get Single Public Profile
+    @POST("get_users")
+    suspend fun getSpecificUser(
+        @Header("Authorization") token: String,
+        @Body request: GetUsersRequest
+    ): Response<BaseResponse<User>>
     // == END: USER ==
 
     // == START: POST ==
@@ -104,4 +121,31 @@ interface ApiService {
         @Body request: UpdatePremiseRequest
     ): Response<BaseResponse<Premise>>
     // == END: PREMISE ==
+
+    // == START: PRODUCT ==
+    @POST("get_product_categories")
+    suspend fun getProductCategories(
+        @Header("Authorization") token: String
+    ): Response<BaseResponse<List<ProductCategory>>>
+
+    @POST("get_products")
+    suspend fun getProducts(
+        @Header("Authorization") token: String,
+        @Body request: GetProductRequest
+    ): Response<BaseResponse<List<Product>>>
+
+    @Multipart
+    @POST("add_product")
+    suspend fun addProduct(
+        @Header("Authorization") token: String,
+        @Part("product_name") name: RequestBody,
+        @Part("product_description") description: RequestBody,
+        @Part("product_qty") qty: RequestBody,
+        @Part("product_unit") unit: RequestBody,
+        @Part("product_price") price: RequestBody,
+        @Part("categoryID") categoryId: RequestBody,
+        @Part("premiseID") premiseId: RequestBody,
+        @Part images: List<MultipartBody.Part> // Array of images
+    ): Response<BaseResponse<Product>>
+    // == END: PRODUCT ==
 }

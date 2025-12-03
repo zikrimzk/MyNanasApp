@@ -6,11 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.bumptech.glide.Glide
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.spm.mynanasapp.data.model.request.GetUsersRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class EntrepreneurPublicProfileFragment : Fragment() {
 
@@ -18,8 +25,16 @@ class EntrepreneurPublicProfileFragment : Fragment() {
     private var userId: Long = 0
     private var username: String? = null
     private var fullname: String? = null
-    private var bio: String? = null
-    private var role: String? = "Entrepreneur"
+
+    // Views
+    private lateinit var tvToolbarUsername: TextView
+    private lateinit var tvFullName: TextView
+    private lateinit var tvBio: TextView
+    private lateinit var tvCategory: TextView
+    private lateinit var ivProfile: ImageView
+    private lateinit var tvStatPosts: TextView
+    private lateinit var tvStatProducts: TextView
+    private lateinit var tvStatPineapples: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,8 +42,6 @@ class EntrepreneurPublicProfileFragment : Fragment() {
             userId = it.getLong("USER_ID")
             username = it.getString("USERNAME")
             fullname = it.getString("FULLNAME")
-            bio = it.getString("BIO")
-            role = it.getString("ROLE")
         }
     }
 
@@ -43,17 +56,21 @@ class EntrepreneurPublicProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. Find Views
-        val tvToolbarUsername = view.findViewById<TextView>(R.id.tv_toolbar_username)
-        val tvFullName = view.findViewById<TextView>(R.id.tv_fullname)
-        val tvBio = view.findViewById<TextView>(R.id.tv_bio)
-        val tvCategory = view.findViewById<TextView>(R.id.tv_category) // The Role
+        tvToolbarUsername = view.findViewById(R.id.tv_toolbar_username)
+        tvFullName = view.findViewById(R.id.tv_fullname)
+        tvBio = view.findViewById(R.id.tv_bio)
+        tvCategory = view.findViewById(R.id.tv_category)
+        ivProfile = view.findViewById(R.id.iv_profile)
+        tvStatPosts = view.findViewById(R.id.tv_stat_posts)
+        tvStatProducts = view.findViewById(R.id.tv_stat_products)
+        tvStatPineapples = view.findViewById(R.id.tv_stat_pineapples)
         val btnBack = view.findViewById<ImageView>(R.id.btn_back)
 
         // 2. Bind Data
-        tvToolbarUsername.text = username ?: "User"
+        tvToolbarUsername.text = "@${username ?: "User"}"
         tvFullName.text = fullname ?: "Entrepreneur"
-        tvBio.text = bio ?: "No bio available."
-        tvCategory.text = role ?: "Entrepreneur"
+        tvCategory.text = "Entrepreneur" // Default until loaded
+        loadUserProfile()
 
         // 3. Back Action
         btnBack.setOnClickListener {
@@ -62,6 +79,44 @@ class EntrepreneurPublicProfileFragment : Fragment() {
 
         // 4. Setup Tabs
         setupTabs(view)
+    }
+
+    private fun loadUserProfile() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            // Fetch Specific User
+            val request = GetUsersRequest(specific_user = true, entID = userId)
+
+            try {
+                // Call the endpoint that returns Single User
+                val response = RetrofitClient.instance.getSpecificUser("Bearer $token", request)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val user = response.body()!!.data
+
+                    if (user != null) {
+                        tvToolbarUsername.text = "@${user.ent_username}"
+                        tvFullName.text = user.ent_fullname
+                        tvBio.text = user.ent_bio ?: "No bio available."
+
+                        // Load Profile Photo
+                        if (!user.ent_profilePhoto.isNullOrEmpty()) {
+                            Glide.with(this@EntrepreneurPublicProfileFragment)
+                                .load(RetrofitClient.SERVER_IMAGE_URL + user.ent_profilePhoto)
+                                .placeholder(R.drawable.ic_launcher_background)
+                                .into(ivProfile)
+                        }
+
+                        tvStatPosts.text = user?.total_posts.toString()
+                        tvStatProducts.text = user?.total_products.toString()
+                        tvStatPineapples.text = user?.total_likes.toString()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to load profile", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupTabs(view: View) {

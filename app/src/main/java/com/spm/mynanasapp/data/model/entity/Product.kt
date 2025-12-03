@@ -1,5 +1,7 @@
 package com.spm.mynanasapp.data.model.entity
 
+import java.io.Serializable
+
 data class Product(
     val productID: Long,
     val product_name: String,
@@ -13,5 +15,7 @@ data class Product(
     val categoryID: Long,
     val premiseID: Long,
     val created_at: String,
-    val updated_at: String
-)
+    val updated_at: String,
+
+    val premise: Premise? = null,
+) : Serializable

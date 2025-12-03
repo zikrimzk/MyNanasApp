@@ -100,7 +100,7 @@ class EntrepreneurProfileFragment : Fragment() {
         // If username is null, fallback to "Entrepreneur"
         tvToolbarUsername.text = currentUser?.ent_username ?: "Entrepreneur"
         tvFullName.text = currentUser?.ent_fullname ?: "MyNanas User"
-        tvBio.text = currentUser?.ent_bio ?: ""
+        tvBio.text = currentUser?.ent_bio ?: "No bio available."
         if (!currentUser?.ent_profilePhoto.isNullOrEmpty()) {
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser?.ent_profilePhoto
             Glide.with(this)
@@ -109,10 +109,9 @@ class EntrepreneurProfileFragment : Fragment() {
                 .into(ivProfile)
         }
 
-        // TODO: Populate these from API later
-        tvStatPosts.text = "12"
-        tvStatProducts.text = "5"
-        tvStatPineapples.text = "850"
+        tvStatPosts.text = currentUser?.total_posts.toString()
+        tvStatProducts.text = currentUser?.total_products.toString()
+        tvStatPineapples.text = currentUser?.total_likes.toString()
     }
 
     private fun setupClickListeners(view: View) {

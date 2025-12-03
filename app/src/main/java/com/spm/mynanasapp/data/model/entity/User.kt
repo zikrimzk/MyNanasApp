@@ -17,5 +17,9 @@ data class User(
     val ent_password: String,
     val remember_token: String?, // Corresponds to rememberToken(), nullable
     val created_at: String, // Corresponds to timestamps()
-    val updated_at: String  // Corresponds to timestamps()
+    val updated_at: String,  // Corresponds to timestamps()
+
+    var total_posts: Int = 0,
+    var total_products: Int = 0,
+    var total_likes: Int = 0
 )

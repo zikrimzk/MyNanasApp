@@ -13,13 +13,19 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.spm.mynanasapp.data.model.entity.User
+import com.spm.mynanasapp.data.model.request.GetUsersRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class SearchEntrepreneurFragment : Fragment() {
 
     private lateinit var adapter: SearchUserAdapter
-    private val allUsers = mutableListOf<SearchUser>() // Mock Master List
+    private val allUsers = mutableListOf<User>() // Mock Master List
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,11 +51,9 @@ class SearchEntrepreneurFragment : Fragment() {
 
             // 1. Create Fragment
             val publicProfile = EntrepreneurPublicProfileFragment.newInstance(
-                userId = user.id,
-                username = user.username,
-                fullname = user.fullname,
-                bio = "Premium Pineapple Supplier in Johor 🍍 | Export Quality",
-                role = "Entrepreneur"
+                userId = user.entID,
+                username = user.ent_username,
+                fullname = user.ent_fullname
             )
 
             // 2. Navigate with SLIDE ANIMATION
@@ -66,8 +70,8 @@ class SearchEntrepreneurFragment : Fragment() {
         }
         recyclerView.adapter = adapter
 
-        // 3. Load Mock Data (Replace with API later)
-        loadMockUsers()
+        // 3. Load API Data
+        loadUsersFromApi()
 
         // 4. Search Logic (TextWatcher)
         etSearch.addTextChangedListener(object : TextWatcher {
@@ -91,6 +95,33 @@ class SearchEntrepreneurFragment : Fragment() {
         imm.showSoftInput(etSearch, InputMethodManager.SHOW_IMPLICIT)
     }
 
+    private fun loadUsersFromApi() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            // specific_user = false to get list
+            val request = GetUsersRequest(specific_user = false)
+
+            try {
+                // Call the endpoint that returns List<User>
+                val response = RetrofitClient.instance.getAllUsers("Bearer $token", request)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val users = response.body()?.data ?: emptyList()
+                    allUsers.clear()
+                    allUsers.addAll(users)
+
+                    // Initially show empty or all users? Usually empty until typed.
+                    adapter.updateList(emptyList())
+                } else {
+                    Toast.makeText(context, "Failed to load users", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun filterUsers(query: String, emptyView: TextView) {
         if (query.isEmpty()) {
             adapter.updateList(emptyList()) // Show nothing or Recent Searches
@@ -100,7 +131,8 @@ class SearchEntrepreneurFragment : Fragment() {
 
         // Filter Logic
         val filtered = allUsers.filter {
-            it.username.lowercase().contains(query) || it.fullname.lowercase().contains(query)
+            it.ent_username.lowercase().contains(query) ||
+                    it.ent_fullname.lowercase().contains(query)
         }
 
         adapter.updateList(filtered)
@@ -112,14 +144,6 @@ class SearchEntrepreneurFragment : Fragment() {
         } else {
             emptyView.visibility = View.GONE
         }
-    }
-
-    private fun loadMockUsers() {
-        allUsers.add(SearchUser(1, "zikrimzk", "Zikri Mazlan"))
-        allUsers.add(SearchUser(2, "ali_farming", "Ali Abu Bakar"))
-        allUsers.add(SearchUser(3, "siti_nanas", "Siti Nurhaliza"))
-        allUsers.add(SearchUser(4, "johor_agro", "Johor Agriculture Dept"))
-        allUsers.add(SearchUser(5, "my_nanas_official", "MyNanas Support"))
     }
 
     // --- HIDE BOTTOM NAV ---

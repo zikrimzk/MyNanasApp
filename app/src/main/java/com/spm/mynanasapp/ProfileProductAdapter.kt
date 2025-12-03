@@ -7,7 +7,11 @@ import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.spm.mynanasapp.data.model.entity.Product
+import com.spm.mynanasapp.data.network.RetrofitClient
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -48,8 +52,24 @@ class ProfileProductAdapter(
         }
 
         // 3. Image
+        // R.drawable.pineapple_2
         // if (item.product_image != null) Glide...
-        holder.ivImage.setImageResource(R.drawable.pineapple_2)
+        holder.ivImage.setImageResource(R.drawable.ic_launcher_background) // Default
+
+        try {
+            if (!item.product_image.isNullOrEmpty()) {
+                val listType = object : TypeToken<List<String>>() {}.type
+                val imageList: List<String> = Gson().fromJson(item.product_image, listType)
+
+                if (imageList.isNotEmpty()) {
+                    val fullUrl = RetrofitClient.SERVER_IMAGE_URL + imageList[0]
+                    Glide.with(holder.itemView)
+                        .load(fullUrl)
+                        .centerCrop()
+                        .into(holder.ivImage)
+                }
+            }
+        } catch (e: Exception) { e.printStackTrace() }
 
         // 4. Menu Action
         holder.btnMore.setOnClickListener { view ->
