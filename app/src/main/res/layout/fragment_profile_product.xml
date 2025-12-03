@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <!-- 1. PINNED ADD BUTTON -->
+    <LinearLayout
+        android:id="@+id/container_pinned_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="2dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_product"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="+ Add New Product"
+            android:textColor="@color/gov_orange_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="8dp"
+            app:rippleColor="#33E65100"
+            app:strokeColor="@color/gov_orange_primary"
+            app:strokeWidth="1dp" />
+    </LinearLayout>
+
+    <!-- 2. CONTENT AREA -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- A. LIST (Grid) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_profile_products"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="10dp"
+            android:paddingBottom="80dp" />
+
+        <!-- B. EMPTY STATE -->
+        <include
+            android:id="@+id/layout_empty_placeholder"
+            layout="@layout/item_tab_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

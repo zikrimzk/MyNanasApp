@@ -157,21 +157,21 @@ class EntrepreneurProfileFragment : Fragment() {
         }
     }
 
-    // --- INNER ADAPTER FOR TABS ---
-    inner class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    // --- TABS ADAPTER ---
+    class ProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
         override fun getItemCount(): Int = 3
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> ProfilePostsFragment() // Your real posts
-                1 -> PlaceholderTabFragment.newInstance(1, isEditable = true) // SHOW BUTTON
-                2 -> ProfilePremiseFragment() // Your real premises
+                0 -> ProfilePostsFragment()
+                1 -> ProfileProductFragment()
+                2 -> ProfilePremiseFragment()
                 else -> PlaceholderTabFragment.newInstance(position, isEditable = true)
             }
         }
     }
 
-    // --- LOGOUT LOGIC (Kept from your original code) ---
+    // --- LOGOUT LOGIC ---
     private fun performLogout() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {

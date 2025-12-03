@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingEnd="12dp"
+    android:paddingTop="12dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+    <!-- Padding creates space for the button so it's not cut off -->
+
+    <!-- 1. IMAGE CARD (100dp Square) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_image_base"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_margin="2dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#F5F5F5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <!-- Removed top constraint so it sits at the bottom -->
+
+        <ImageView
+            android:id="@+id/iv_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_gallery"/>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- 2. DELETE BUTTON (Top Right) -->
+    <!-- Positioned relative to the CARD, but pushed up/right into the padding area -->
+    <ImageView
+        android:id="@+id/btn_remove_image"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="@drawable/bg_circle_black_transparent"
+        android:padding="6dp"
+        android:elevation="6dp"
+        app:tint="@color/white"
+        app:layout_constraintEnd_toEndOf="@+id/cv_image_base"
+        app:layout_constraintTop_toTopOf="@+id/cv_image_base"
+        android:translationX="8dp"
+        android:translationY="-8dp"/>
+    <!-- Translation moves it exactly into the padding area we created -->
+
+</androidx.constraintlayout.widget.ConstraintLayout>

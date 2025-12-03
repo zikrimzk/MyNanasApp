@@ -60,6 +60,16 @@ class PlaceholderTabFragment : Fragment() {
                 tvDesc.text = if (isEditable) "Add your pineapple products here." else "This user has no products listed."
                 ivIcon.setImageResource(R.drawable.ic_tab_products)
                 btnAction.text = "+ Add Product"
+
+                if (isEditable) {
+                    btnAction.setOnClickListener {
+                        requireActivity().supportFragmentManager.beginTransaction()
+                            .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
+                            .replace(R.id.nav_host_fragment, EntrepreneurAddProductFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    }
+                }
             }
             2 -> {
                 // Premise

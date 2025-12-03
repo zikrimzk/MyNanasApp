@@ -20,4 +20,6 @@
     <string name="user_role_in_profile">Entrepreneur</string>
     <string name="user_full_name_profile">User Fullname</string>
     <string name="fragment_feed_title">Community</string>
+    <string name="view_entrepreneur_profile_btn">View Entrepreneur Profile</string>
+    <string name="sp_text_pi">Product Information</string>
 </resources>

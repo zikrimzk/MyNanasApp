@@ -9,11 +9,9 @@ data class Product(
     val product_price: Double, // Converted from decimal(10, 2)
     val product_status: Int,
     val product_image: String?,
-
     // Foreign Keys
     val categoryID: Long,
     val premiseID: Long,
-
     val created_at: String,
     val updated_at: String
 )
