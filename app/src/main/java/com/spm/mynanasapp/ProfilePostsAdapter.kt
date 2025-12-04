@@ -66,12 +66,12 @@ class ProfilePostsAdapter(
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + post.user.ent_profilePhoto
             Glide.with(context)
                 .load(fullUrl)
-                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .placeholder(R.drawable.placeholder_versatile) // Replace with your default avatar
                 .into(holder.tvAvatar)
         } else {
             Glide.with(context)
                 .load(R.drawable.ic_avatar_placeholder)
-                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .placeholder(R.drawable.placeholder_versatile) // Replace with your default avatar
                 .into(holder.tvAvatar)
         }
 
@@ -134,7 +134,7 @@ class ProfilePostsAdapter(
                 // 4. Load with Glide
                 Glide.with(context)
                     .load(fullUrl)
-                    .placeholder(R.drawable.ic_launcher_background) // Add a placeholder drawable
+                    .placeholder(R.drawable.placeholder_versatile) // Add a placeholder drawable
                     .error(android.R.drawable.stat_notify_error) // Error icon
                     .into(imageView)
 

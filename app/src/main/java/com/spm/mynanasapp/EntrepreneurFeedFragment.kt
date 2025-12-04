@@ -111,7 +111,7 @@ class EntrepreneurFeedFragment : Fragment() {
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser?.ent_profilePhoto
             Glide.with(this)
                 .load(fullUrl)
-                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
+                .placeholder(R.drawable.placeholder_versatile)
                 .into(ivHeaderAvatar)
         }
     }

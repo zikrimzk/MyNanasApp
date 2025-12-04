@@ -1,6 +1,9 @@
 package com.spm.mynanasapp
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Shader
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -56,6 +59,7 @@ class FragmentLoginEntrepreneur : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupHeaderStyle(view)
         animateEntrance(view)
 
         // Initialization Views
@@ -300,8 +304,24 @@ class FragmentLoginEntrepreneur : Fragment() {
 
     }
 
+
+    private fun setupHeaderStyle(view: View) {
+        val tvTitle = view.findViewById<TextView>(R.id.tv_login_title)
+
+        // Apply Gradient (Orange -> Dark Orange)
+        val paint = tvTitle.paint
+        val width = paint.measureText(tvTitle.text.toString())
+        val textShader = LinearGradient(0f, 0f, width, tvTitle.textSize,
+            intArrayOf(
+                Color.parseColor("#FF9800"), // Brighter Orange
+                Color.parseColor("#E65100")  // Deep Orange
+            ), null, Shader.TileMode.CLAMP)
+        tvTitle.paint.shader = textShader
+    }
+
     private fun animateEntrance(view: View) {
         val title = view.findViewById<View>(R.id.tv_login_title)
+        val subtitle = view.findViewById<View>(R.id.tv_login_subtitle)
         val inputUser = view.findViewById<View>(R.id.til_username)
         val inputPass = view.findViewById<View>(R.id.til_password)
         val remember = view.findViewById<View>(R.id.cb_remember_me)
@@ -310,7 +330,7 @@ class FragmentLoginEntrepreneur : Fragment() {
         val signUpText = view.findViewById<View>(R.id.tv_signup_text)
         val signUpAction = view.findViewById<View>(R.id.tv_signup_action)
 
-        val views = listOf(title, inputUser, inputPass, remember, forgot, btnLogin, signUpText, signUpAction)
+        val views = listOf(title, subtitle, inputUser, inputPass, remember, forgot, btnLogin, signUpText, signUpAction)
 
         for (v in views) {
             v?.alpha = 0f
@@ -318,6 +338,7 @@ class FragmentLoginEntrepreneur : Fragment() {
         }
 
         title?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(400)?.start()
+        subtitle?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(400)?.start()
 
         inputUser?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(400)?.start()
         inputPass?.animate()?.alpha(1f)?.translationY(0f)?.setDuration(600)?.setStartDelay(500)?.start()

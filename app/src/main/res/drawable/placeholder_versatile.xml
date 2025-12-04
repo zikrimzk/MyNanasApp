@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Background Color -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F5F5F5" />
+        </shape>
+    </item>
+
+    <!-- 2. Centered Icon -->
+    <item
+        android:drawable="@drawable/ic_pineapple_placeholder"
+        android:gravity="center"
+        android:top="24dp"
+        android:bottom="24dp"
+        android:left="24dp"
+        android:right="24dp" />
+
+</layer-list>

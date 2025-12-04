@@ -14,18 +14,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
-        // Check if user is already logged in
         val savedToken = SessionManager.getToken(this)
 
         if (savedToken != null) {
-            // "Re-inject" the token into Retrofit so API calls work
             RetrofitClient.setToken(savedToken)
         }
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, StartupFragment())
+                .replace(R.id.fragment_container,FragmentLoginEntrepreneur())
                 .commit()
         }
     }

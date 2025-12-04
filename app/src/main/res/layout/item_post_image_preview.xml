@@ -10,24 +10,24 @@
         android:id="@+id/cv_image_base"
         android:layout_width="wrap_content"
         android:layout_height="220dp"
+        app:cardBackgroundColor="#F5F5F5"
         app:cardCornerRadius="12dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="#F5F5F5">
+        app:cardElevation="0dp">
 
         <ImageView
             android:id="@+id/iv_preview"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
+            android:minWidth="120dp"
             android:scaleType="fitCenter"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:minWidth="120dp"/>
+            android:src="@drawable/placeholder_versatile" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:background="@drawable/bg_gradient_top_shadow"
-            android:gravity="top"/>
+            android:gravity="top" />
 
     </androidx.cardview.widget.CardView>
 
@@ -38,10 +38,10 @@
         android:layout_gravity="top|end"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
         android:background="@drawable/bg_circle_black_transparent"
-        android:padding="6dp"
         android:elevation="4dp"
-        app:tint="@color/white"/>
+        android:padding="6dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        app:tint="@color/white" />
 
 </FrameLayout>

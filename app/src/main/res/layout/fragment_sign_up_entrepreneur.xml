@@ -7,8 +7,10 @@
     android:layout_height="match_parent"
     android:background="@color/gov_orange_primary"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:fitsSystemWindows="true">
 
+    <!-- HEADER CONTENT -->
     <TextView
         android:id="@+id/ent_tv_header_title"
         android:layout_width="wrap_content"
@@ -74,6 +76,7 @@
             android:textColor="@color/white"/>
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!-- SCROLLABLE FORM SHEET -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -90,7 +93,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingBottom="50dp">
+            android:paddingBottom="120dp">
+            <!-- Increased paddingBottom to 120dp allows scrolling higher above keyboard -->
 
             <TextView
                 android:layout_width="wrap_content"
@@ -243,7 +247,8 @@
                         android:id="@+id/ent_et_ssm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textCapCharacters"/> </com.google.android.material.textfield.TextInputLayout>
+                        android:inputType="textCapCharacters"/>
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
             <View
