@@ -14,6 +14,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import com.spm.mynanasapp.data.model.request.LoginRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @SuppressLint("CustomSplashScreen")
 class SplashScreenActivity : AppCompatActivity() {
@@ -34,13 +41,75 @@ class SplashScreenActivity : AppCompatActivity() {
         // FUNCTION : ANIMATION
         animateEntrance(logo, appName, copyright)
 
+        handleAutoLoginOrNavigation()
+
         // FUNCTION : NAVIGATE
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            val intent = Intent(this, MainActivity::class.java)
+//            startActivity(intent)
+//            finish()
+//            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+//        }, 2500)
+    }
+
+    private fun handleAutoLoginOrNavigation() {
+        lifecycleScope.launch {
+            // 1. Start the minimum wait timer (so the logo doesn't flash too fast)
+            // We use 'async' to let this run in the background while we check the network
+            val minTimer = async { delay(2500) }
+
+            var nextIntent: Intent? = null
+
+            // 2. Check if "Remember Me" is checked
+            if (SessionManager.isRemembered(this@SplashScreenActivity)) {
+                val username = SessionManager.getSavedUsername(this@SplashScreenActivity)
+                val password = SessionManager.getSavedPassword(this@SplashScreenActivity)
+
+                if (!username.isNullOrEmpty() && !password.isNullOrEmpty()) {
+                    // 3. Attempt Silent Login in Background
+                    try {
+                        val request = LoginRequest(ent_username = username, ent_password = password)
+                        val response = RetrofitClient.instance.login(request)
+
+                        if (response.isSuccessful && response.body()?.status == true) {
+                            val data = response.body()!!.data
+
+                            // Save fresh Token and User Data
+                            if (data != null) {
+                                if (data.token != null) {
+                                    SessionManager.saveAuthToken(this@SplashScreenActivity, data.token)
+                                    RetrofitClient.setToken(data.token)
+                                }
+                                if (data.user != null) {
+                                    SessionManager.saveUser(this@SplashScreenActivity, data.user)
+                                }
+
+                                // Success! Prepare to go to Portal
+                                nextIntent = Intent(this@SplashScreenActivity, EntrepreneurPortalActivity::class.java)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // If network fails or password changed, we simply stay null
+                        // which means we will fall back to the Login Screen.
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            // 4. Wait for the timer to finish (if the API was faster than 2.5s)
+            minTimer.await()
+
+            // 5. Navigate
+            if (nextIntent != null) {
+                startActivity(nextIntent)
+            } else {
+                // Fallback to Main Activity (Login)
+                startActivity(Intent(this@SplashScreenActivity, MainActivity::class.java))
+            }
+
             finish()
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-        }, 2500)
+        }
     }
 
     private fun applyGradientToText(textView: TextView) {

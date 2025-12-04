@@ -43,7 +43,7 @@ class SearchUserAdapter(
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + user.ent_profilePhoto
             Glide.with(holder.itemView.context)
                 .load(fullUrl)
-                .placeholder(R.drawable.ic_launcher_background) // Add your placeholder
+                .placeholder(R.drawable.ic_avatar_placeholder) // Add your placeholder
                 .circleCrop()
                 .into(holder.ivAvatar)
         } else {

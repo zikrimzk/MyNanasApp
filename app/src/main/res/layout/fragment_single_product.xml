@@ -57,13 +57,37 @@
             android:paddingBottom="32dp">
 
             <!-- PRODUCT IMAGE -->
-            <ImageView
-                android:id="@+id/iv_product_image"
+<!--            <ImageView-->
+<!--                android:id="@+id/iv_product_image"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="300dp"-->
+<!--                android:background="#F5F5F5"-->
+<!--                android:scaleType="centerCrop"-->
+<!--                android:src="@drawable/pineapple_2" />-->
+
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
-                android:background="#F5F5F5"
-                android:scaleType="centerCrop"
-                android:src="@drawable/pineapple_2" />
+                android:background="#F5F5F5">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/vp_image_gallery"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/pineapple_2" />
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tab_indicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="6dp"
+                    app:tabGravity="center"
+                    app:tabIndicatorHeight="0dp" />
+
+            </FrameLayout>
 
             <!-- MAIN DETAILS -->
             <LinearLayout

@@ -1,11 +1,9 @@
 package com.spm.mynanasapp
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -16,60 +14,51 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
-import com.google.gson.Gson
 import com.spm.mynanasapp.data.model.entity.Product
 import com.spm.mynanasapp.data.model.request.GetProductRequest
 import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.launch
 
-class ProfileProductFragment : Fragment() {
+class PublicProfileProductFragment : Fragment() {
 
-    private lateinit var adapter: ProfileProductAdapter
+    private var userId: Long = 0
+    private lateinit var adapter: ProductAdapter // Use the Market adapter (Read-only)
     private val productList = mutableListOf<Product>()
 
+    companion object {
+        fun newInstance(userId: Long) = PublicProfileProductFragment().apply {
+            arguments = Bundle().apply { putLong("USER_ID", userId) }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        userId = arguments?.getLong("USER_ID") ?: 0
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_profile_product, container, false)
+        return inflater.inflate(R.layout.fragment_public_profile_product, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Setup RecyclerView (Grid - 2 Columns)
+        // 2. Setup RecyclerView
         val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_profile_products)
         recyclerView.layoutManager = GridLayoutManager(context, 2)
 
-        adapter = ProfileProductAdapter(productList,
-            onEdit = { product ->
-                // Serialize and pass to Edit Fragment
-                val json = Gson().toJson(product)
-
-                requireActivity().supportFragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
-                    .replace(R.id.nav_host_fragment, EntrepreneurEditProductFragment().apply {
-                        arguments = Bundle().apply {
-                            putString("PRODUCT_DATA", json)
-                        }
-                    })
-                    .addToBackStack(null)
-                    .commit()
-            },
-            onDelete = { product -> confirmDelete(product) }
-        )
+        adapter = ProductAdapter(productList) { product ->
+            // Navigate to Single Product
+            requireActivity().supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.nav_host_fragment, SingleProductFragment.newInstance(product.productID, product.product_name, product.product_price))
+                .addToBackStack(null)
+                .commit()
+        }
         recyclerView.adapter = adapter
 
-        // 2. Setup Add Button
-        val btnAdd = view.findViewById<Button>(R.id.btn_add_product)
-        btnAdd.setOnClickListener { navigateToAddProduct() }
-
-        // 3. Setup Swipe Refresh
-        val swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
-        swipeRefresh.setColorSchemeResources(R.color.gov_orange_primary)
-        swipeRefresh.setOnRefreshListener {
-            loadProductsFromApi()
-        }
-
-        // 4. Load Data
+        // 3. Load Data
         loadProductsFromApi()
     }
 
@@ -86,7 +75,7 @@ class ProfileProductFragment : Fragment() {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
             // Fetch Specific User's Products
-            val request = GetProductRequest(specific_user = true, )
+            val request = GetProductRequest(specific_user = true, entID = userId)
 
             try {
                 val response = RetrofitClient.instance.getProducts("Bearer $token", request)
@@ -110,65 +99,29 @@ class ProfileProductFragment : Fragment() {
         }
     }
 
-    private fun navigateToAddProduct() {
-        requireActivity().supportFragmentManager.beginTransaction()
-            .setCustomAnimations(R.anim.slide_in_up, R.anim.stay_still, R.anim.stay_still, R.anim.slide_out_down)
-            .replace(R.id.nav_host_fragment, EntrepreneurAddProductFragment())
-            .addToBackStack(null)
-            .commit()
-    }
-
-    private fun confirmDelete(product: Product) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Product")
-            .setMessage("Remove ${product.product_name} from your list?")
-            .setPositiveButton("Delete") { _, _ ->
-                val index = productList.indexOf(product)
-                if (index != -1) {
-                    productList.removeAt(index)
-                    adapter.notifyItemRemoved(index)
-                    checkEmptyState()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
     private fun checkEmptyState() {
         if (!isAdded || view == null) return
-
-        val containerPinned = view?.findViewById<View>(R.id.container_pinned_button)
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_profile_products)
         val emptyLayout = view?.findViewById<View>(R.id.layout_empty_placeholder)
 
         if (productList.isEmpty()) {
             // === STATE: EMPTY ===
             recyclerView?.visibility = View.GONE
-            containerPinned?.visibility = View.GONE
             emptyLayout?.visibility = View.VISIBLE
 
             // Customize Placeholder Content
             val tvTitle = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_title)
             val tvDesc = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_desc)
             val ivIcon = emptyLayout?.findViewById<ImageView>(R.id.iv_placeholder_icon)
-            val btnPlaceholder = emptyLayout?.findViewById<MaterialButton>(R.id.btn_tab_action)
 
             tvTitle?.text = "No Products Listed"
-            tvDesc?.text = "Add your pineapple products to the marketplace."
+            tvDesc?.text = "There are no products sold by this user."
             ivIcon?.setImageResource(R.drawable.ic_tab_products)
-
-            // Setup the button INSIDE the placeholder
-            btnPlaceholder?.visibility = View.VISIBLE
-            btnPlaceholder?.text = "+ Add New Product"
-            btnPlaceholder?.setOnClickListener {
-                navigateToAddProduct()
-            }
 
         } else {
             // === STATE: HAS DATA ===
             emptyLayout?.visibility = View.GONE
             recyclerView?.visibility = View.VISIBLE
-            containerPinned?.visibility = View.VISIBLE
         }
     }
 }

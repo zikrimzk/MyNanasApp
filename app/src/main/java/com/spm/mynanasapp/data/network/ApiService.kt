@@ -139,13 +139,32 @@ interface ApiService {
     suspend fun addProduct(
         @Header("Authorization") token: String,
         @Part("product_name") name: RequestBody,
-        @Part("product_description") description: RequestBody,
+        @Part("product_desc") desc: RequestBody,
         @Part("product_qty") qty: RequestBody,
         @Part("product_unit") unit: RequestBody,
         @Part("product_price") price: RequestBody,
         @Part("categoryID") categoryId: RequestBody,
         @Part("premiseID") premiseId: RequestBody,
         @Part images: List<MultipartBody.Part> // Array of images
+    ): Response<BaseResponse<Product>>
+
+    @Multipart
+    @POST("update_product")
+    suspend fun updateProduct(
+        @Header("Authorization") token: String,
+        @Part("productID") id: RequestBody,
+        @Part("is_delete") isDelete: RequestBody,
+        // Text Fields
+        @Part("product_name") name: RequestBody?,
+        @Part("product_desc") desc: RequestBody?,
+        @Part("categoryID") categoryId: RequestBody?,
+        @Part("product_qty") qty: RequestBody?,
+        @Part("product_unit") unit: RequestBody?,
+        @Part("product_price") price: RequestBody?,
+        @Part("premiseID") premiseId: RequestBody?,
+        // Images
+        @Part existing_images: List<MultipartBody.Part>, // Strings of old paths
+        @Part new_images: List<MultipartBody.Part>       // New Files
     ): Response<BaseResponse<Product>>
     // == END: PRODUCT ==
 }

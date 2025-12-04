@@ -15,5 +15,7 @@ data class Premise(
     val premise_coordinates: String?, // Nullable field
     val entID: Long, // Foreign Key
     val created_at: String,
-    val updated_at: String
+    val updated_at: String,
+
+    val user: User? = null, // Foreign Key Relationship
 ) : Serializable

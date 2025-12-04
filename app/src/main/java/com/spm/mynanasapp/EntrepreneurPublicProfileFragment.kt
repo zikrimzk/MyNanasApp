@@ -104,10 +104,9 @@ class EntrepreneurPublicProfileFragment : Fragment() {
                         if (!user.ent_profilePhoto.isNullOrEmpty()) {
                             Glide.with(this@EntrepreneurPublicProfileFragment)
                                 .load(RetrofitClient.SERVER_IMAGE_URL + user.ent_profilePhoto)
-                                .placeholder(R.drawable.ic_launcher_background)
+                                .placeholder(R.drawable.ic_avatar_placeholder)
                                 .into(ivProfile)
                         }
-
                         tvStatPosts.text = user?.total_posts.toString()
                         tvStatProducts.text = user?.total_products.toString()
                         tvStatPineapples.text = user?.total_likes.toString()
@@ -149,8 +148,12 @@ class EntrepreneurPublicProfileFragment : Fragment() {
     inner class PublicProfilePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
         override fun getItemCount(): Int = 3
         override fun createFragment(position: Int): Fragment {
-            // isEditable = false -> Hides "Create" buttons
-            return PlaceholderTabFragment.newInstance(position, isEditable = false)
+            return when (position) {
+                0 -> PublicProfilePostsFragment.newInstance(userId)
+                1 -> PublicProfileProductFragment.newInstance(userId)
+                2 -> PublicProfilePremiseFragment.newInstance(userId)
+                else -> PlaceholderTabFragment.newInstance(position, isEditable = true)
+            }
         }
     }
 

@@ -2,7 +2,8 @@ package com.spm.mynanasapp.data.model.request
 
 data class GetPostRequest(
     val post_type: String,
-    val specific_user: Boolean?
+    val specific_user: Boolean?,
+    val entID: Long? = null
 )
 
 data class UpdatePostRequest(

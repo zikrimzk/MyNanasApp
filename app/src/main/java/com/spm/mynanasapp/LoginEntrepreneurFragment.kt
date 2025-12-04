@@ -71,96 +71,9 @@ class FragmentLoginEntrepreneur : Fragment() {
         val etPassword = view.findViewById<EditText>(R.id.et_password)
 
         if (SessionManager.isRemembered(requireContext())) {
-//            etUsername.setText(SessionManager.getSavedUsername(requireContext()))
-//            etPassword.setText(SessionManager.getSavedPassword(requireContext()))
-//            cbRememberMe.isChecked = true
-            val username = SessionManager.getSavedUsername(requireContext())
-            val password = SessionManager.getSavedPassword(requireContext())
-
-            if (username != null && password != null) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        val loginRequest = LoginRequest(ent_username = username, ent_password = password)
-
-                        val response = RetrofitClient.instance.login(loginRequest)
-
-                        if (response.isSuccessful && response.body() != null) {
-                            // === STATUS CODE 200 (Success) ===
-
-                            val baseResponse = response.body()!!
-
-                            // Check the Logical Status (from our BaseResponse)
-                            if (baseResponse.status) {
-
-                                // 1. Get Data
-                                val loginResult = baseResponse.data
-                                val token = loginResult?.token
-                                val user = loginResult?.user
-
-                                // 2. Save Token (SharedPreference inside SessionManager)
-                                if (token != null) {
-                                    // Ensure you have a Context here (requireContext())
-                                    SessionManager.saveAuthToken(requireContext(), token)
-                                    RetrofitClient.setToken(token)
-                                }
-
-                                if (user != null) {
-                                    SessionManager.saveUser(requireContext(), user)
-                                }
-
-                                Toast.makeText(context, "Successfully login, ${user?.ent_fullname}!", Toast.LENGTH_LONG).show()
-
-                                // 3. Navigate to Portal
-                                val intent = Intent(requireActivity(), EntrepreneurPortalActivity::class.java)
-                                startActivity(intent)
-                                requireActivity().finish()
-
-                            } else {
-                                // API returned 200 OK, but logic failed (e.g. Account Locked)
-                                Toast.makeText(context, baseResponse.message, Toast.LENGTH_SHORT).show()
-                            }
-
-                        } else {
-                            // === STATUS CODE 401, 404, 500 (Error) ===
-                            // This is where "Invalid username or password" usually lands because of the 401 code
-
-                            val errorBody = response.errorBody()
-
-                            if (errorBody != null) {
-                                try {
-                                    // 1. Create Gson instance
-                                    val gson = Gson()
-
-                                    // 2. Tell Gson what type of class to look for
-                                    // We use BaseResponse<LoginResponse> to match the JSON structure
-                                    val type = object : TypeToken<BaseResponse<LoginResponse>>() {}.type
-
-                                    // 3. Convert the Raw Error Stream into your Object
-                                    val errorResponse: BaseResponse<LoginResponse>? = gson.fromJson(errorBody.charStream(), type)
-
-                                    // 4. Extract the clean message
-                                    val cleanMessage = errorResponse?.message ?: "Request Failed"
-
-                                    Toast.makeText(context, cleanMessage, Toast.LENGTH_SHORT).show()
-
-                                } catch (e: Exception) {
-                                    // Fallback: If JSON parsing fails, just show the error code
-                                    Toast.makeText(context, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                Toast.makeText(context, "Unknown Error Occurred", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        // === NETWORK ERROR (No Internet) ===
-                        Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    } finally {
-                        // Re-enable button
-                        btnLogin.isEnabled = true
-                        btnLogin.text = "Login"
-                    }
-                }
-            }
+            etUsername.setText(SessionManager.getSavedUsername(requireContext()))
+            etPassword.setText(SessionManager.getSavedPassword(requireContext()))
+            cbRememberMe.isChecked = true
         }
 
         // Button : Login

@@ -18,4 +18,5 @@ data class Product(
     val updated_at: String,
 
     val premise: Premise? = null,
+    val category: ProductCategory? = null
 ) : Serializable

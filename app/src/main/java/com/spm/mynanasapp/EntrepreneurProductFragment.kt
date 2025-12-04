@@ -18,6 +18,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -25,6 +26,11 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.spm.mynanasapp.data.model.entity.Product
+import com.spm.mynanasapp.data.model.entity.ProductCategory
+import com.spm.mynanasapp.data.model.request.GetProductRequest
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.SessionManager
+import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 import java.util.Locale
 
@@ -44,6 +50,8 @@ class EntrepreneurProductFragment : Fragment() {
     private var selectedState = "All States"
     private var selectedCity = "All Cities"
     private var selectedCategory = "All Categories"
+
+    private var categoryList = listOf<ProductCategory>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -151,8 +159,7 @@ class EntrepreneurProductFragment : Fragment() {
         actvState.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, stateNames))
 
         // --- 2. Setup Category Adapter (Mock/Static) ---
-        val categories = listOf("All Categories", "Fresh Pineapple", "Processed Goods", "Seeds/Slips", "Fertilizer")
-        actvCategory.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categories))
+        loadCategoriesForFilter(view.findViewById(R.id.actv_filter_category))
 
         // --- 3. State Selection Logic ---
         actvState.setOnItemClickListener { _, _, position, _ ->
@@ -191,66 +198,93 @@ class EntrepreneurProductFragment : Fragment() {
         }
 
         // --- 5. Category Selection Logic ---
-        actvCategory.setOnItemClickListener { _, _, position, _ ->
-            selectedCategory = categories[position]
-            applyFilters()
+        actvCategory.setOnItemClickListener { parent, _, position, _ ->
+            selectedCategory = parent.getItemAtPosition(position).toString()
+            applyFilters() // applyFilters now includes API call
+        }
+    }
+
+    private fun loadCategoriesForFilter(actvCategory: AutoCompleteTextView) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+            try {
+                val response = RetrofitClient.instance.getProductCategories("Bearer $token")
+                if (response.isSuccessful && response.body()?.status == true) {
+                    categoryList = response.body()?.data ?: emptyList()
+                    val names = mutableListOf("All Categories")
+                    names.addAll(categoryList.map { it.category_name })
+                    actvCategory.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, names))
+                    actvCategory.setText("All Categories", false)
+                }
+            } catch (e: Exception) {
+                // Silent failure or log error
+                Toast.makeText(requireContext(), "Failed to load categories", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun applyFilters() {
-        val filtered = masterProductList.filter { product ->
-            // 1. Search Query Check
-            val matchesSearch = if (currentSearchQuery.isNotEmpty()) {
-                product.product_name.lowercase(Locale.getDefault()).contains(currentSearchQuery.lowercase(Locale.getDefault()))
-            } else true
-
-            // 2. Category Check
-            val matchesCategory = if (selectedCategory != "All Categories") {
-                // In real app: check product.category == selectedCategory
-                true
-            } else true
-
-            // 3. State/City Check
-            // In real app: You would check product.premise.state == selectedState
-            val matchesState = if (selectedState != "All States") {
-                // product.premiseState == selectedState
-                true
-            } else true
-
-            val matchesCity = if (selectedCity != "All Cities") {
-                // product.premiseCity == selectedCity
-                true
-            } else true
-
-            matchesSearch && matchesCategory && matchesState && matchesCity
+        // Find Category ID (0 = All)
+        val categoryIdToFilter = if (selectedCategory == "All Categories") {
+            0
+        } else {
+            // Find the ID based on the selected Name
+            categoryList.find { it.category_name == selectedCategory }?.categoryID ?: 0
         }
 
-        displayProductList.clear()
-        displayProductList.addAll(filtered)
-        adapter.notifyDataSetChanged()
-
-        // Update Empty State
-        view?.findViewById<View>(R.id.tv_empty_state)?.visibility =
-            if (displayProductList.isEmpty()) View.VISIBLE else View.GONE
+        loadProductsFromApi(
+            state = selectedState,
+            city = selectedCity,
+            categoryId = categoryIdToFilter
+        )
     }
 
     private fun loadProducts() {
+        applyFilters()
+    }
+
+    private fun loadProductsFromApi(state: String, city: String, categoryId: Long) {
         val swipeRefresh = view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
         swipeRefresh?.isRefreshing = true
 
-        // Mock Data
-        masterProductList.clear()
-        masterProductList.add(Product(1, "MD2 Pineapple Grade A", "Fresh & Sweet", 100, "Kg", 12.50, 1, null, 1, 1, "2025-01-01", "2025-01-01"))
-        masterProductList.add(Product(2, "Pineapple Jam (Homemade)", "No preservatives", 50, "Jar", 8.90, 1, null, 2, 1, "2025-02-01", "2025-02-01"))
-        masterProductList.add(Product(3, "Josapine Slips", "Ready to plant", 500, "Unit", 1.50, 1, null, 1, 1, "2025-03-01", "2025-03-01"))
-        masterProductList.add(Product(4, "Dried Pineapple Snacks", "Healthy snack", 200, "Pack", 15.00, 1, null, 2, 1, "2025-03-05", "2025-03-05"))
-        masterProductList.add(Product(5, "Pineapple Juice", "100% Pure", 120, "Bottle", 5.50, 1, null, 2, 1, "2025-03-06", "2025-03-06"))
-        masterProductList.add(Product(6, "NPK Fertilizer", "For Pineapples", 20, "Bag", 45.00, 1, null, 4, 1, "2025-03-07", "2025-03-07"))
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
 
-        // Reset and Apply
-        applyFilters()
+            val request = GetProductRequest(
+                premise_state = state,
+                premise_city = city,
+                categoryID = categoryId,
+                specific_user = false // Marketplace view
+            )
 
-        swipeRefresh?.isRefreshing = false
+            try {
+                val response = RetrofitClient.instance.getProducts("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val data = response.body()?.data ?: emptyList()
+                    masterProductList.clear()
+                    masterProductList.addAll(data)
+
+                    // Client-side search filtering (only for the search box)
+                    val filtered = masterProductList.filter {
+                        it.product_name.lowercase(Locale.getDefault()).contains(currentSearchQuery.lowercase(Locale.getDefault()))
+                    }
+                    displayProductList.clear()
+                    displayProductList.addAll(filtered)
+
+                    adapter.notifyDataSetChanged()
+                } else {
+                    context?.let { ctx ->
+                        Toast.makeText(ctx, "Failed to load products", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                context?.let { ctx ->
+                    Toast.makeText(ctx, "Network Error", Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                swipeRefresh?.isRefreshing = false
+            }
+        }
     }
 
     private fun hideKeyboard(view: View) {

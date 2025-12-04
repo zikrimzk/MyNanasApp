@@ -12,7 +12,8 @@ import com.spm.mynanasapp.data.model.entity.Premise
 class ProfilePremiseAdapter(
     private val premises: MutableList<Premise>,
     private val onEdit: (Premise) -> Unit,
-    private val onDelete: (Premise) -> Unit
+    private val onDelete: (Premise) -> Unit,
+    private val isReadOnly: Boolean = false
 ) : RecyclerView.Adapter<ProfilePremiseAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -52,6 +53,12 @@ class ProfilePremiseAdapter(
             holder.tvSize.visibility = View.GONE
             // Use Shop Icon if not farm
             holder.ivIcon.setImageResource(R.drawable.ic_tab_kiosk)
+        }
+
+        if (isReadOnly) {
+            holder.btnMore.visibility = View.GONE
+        } else {
+            holder.btnMore.visibility = View.VISIBLE
         }
 
         // 4. Popup Menu

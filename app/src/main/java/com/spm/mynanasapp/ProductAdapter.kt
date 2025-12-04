@@ -6,7 +6,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.spm.mynanasapp.data.model.entity.Product
+import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.TimeUtils.getTimeAgo
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -37,22 +42,42 @@ class ProductAdapter(
         // 2. Set Text
         holder.tvName.text = item.product_name
 
-        // Mocking location logic (since Product model uses premiseID, we assume location for now)
-        // In real app, you would map premiseID to a City name
-        holder.tvLocation.text = "Johor • ${getTimeAgo(item.created_at)}"
+        // 3. Location Logic
+        // Access the nested 'premise' object (Make sure your Product entity has 'val premise: Premise?')
+        val city = item.premise?.premise_city ?: "Unknown"
+        val state = item.premise?.premise_state ?: "Location"
+        val timeAgo = getTimeAgo(item.created_at)
 
-        // 3. Load Image (Placeholder logic)
+        holder.tvLocation.text = "$city, $state • $timeAgo"
+
+        // 4. Load Image (Placeholder logic)
         // if (item.product_image != null) Glide...
         holder.ivImage.setImageResource(R.drawable.pineapple_1)
+        if (!item.product_image.isNullOrEmpty()) {
+            try {
+                // Parse JSON String to List
+                val type = object : TypeToken<List<String>>() {}.type
+                val imageList: List<String> = Gson().fromJson(item.product_image, type)
 
-        // 4. Click
+                if (imageList.isNotEmpty()) {
+                    // Get the first image
+                    val fullUrl = RetrofitClient.SERVER_IMAGE_URL + imageList[0]
+
+                    Glide.with(holder.itemView)
+                        .load(fullUrl)
+                        .placeholder(R.drawable.pineapple_1) // Loading placeholder
+                        .error(R.drawable.pineapple_1) // Error placeholder
+                        .centerCrop()
+                        .into(holder.ivImage)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        // 5. Click
         holder.itemView.setOnClickListener { onClick(item) }
     }
 
     override fun getItemCount() = products.size
-
-    // Simple helper for "2h ago" (Placeholder logic)
-    private fun getTimeAgo(dateString: String): String {
-        return "2h ago" // TODO: Implement real Date parsing
-    }
 }

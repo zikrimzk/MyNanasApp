@@ -26,5 +26,6 @@ data class UpdatePremiseRequest(
 
 data class GetPremiseRequest(
     val premise_type: String, // "All", "Farm", "Shop"
-    val specific_user: Boolean
+    val specific_user: Boolean,
+    val entID: Long? = null
 )

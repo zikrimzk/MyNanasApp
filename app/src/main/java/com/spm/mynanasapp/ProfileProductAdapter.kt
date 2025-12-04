@@ -18,7 +18,8 @@ import java.util.Locale
 class ProfileProductAdapter(
     private val products: MutableList<Product>,
     private val onEdit: (Product) -> Unit,
-    private val onDelete: (Product) -> Unit
+    private val onDelete: (Product) -> Unit,
+    private val isReadOnly: Boolean = false
 ) : RecyclerView.Adapter<ProfileProductAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -54,7 +55,7 @@ class ProfileProductAdapter(
         // 3. Image
         // R.drawable.pineapple_2
         // if (item.product_image != null) Glide...
-        holder.ivImage.setImageResource(R.drawable.ic_launcher_background) // Default
+        holder.ivImage.setImageResource(R.drawable.placeholder_versatile) // Default
 
         try {
             if (!item.product_image.isNullOrEmpty()) {
@@ -71,6 +72,12 @@ class ProfileProductAdapter(
                 }
             }
         } catch (e: Exception) { e.printStackTrace() }
+
+        if (isReadOnly) {
+            holder.btnMore.visibility = View.GONE
+        } else {
+            holder.btnMore.visibility = View.VISIBLE
+        }
 
         // 4. Menu Action
         holder.btnMore.setOnClickListener { view ->
