@@ -65,6 +65,7 @@ class ProfileProductAdapter(
                     val fullUrl = RetrofitClient.SERVER_IMAGE_URL + imageList[0]
                     Glide.with(holder.itemView)
                         .load(fullUrl)
+                        .placeholder(R.drawable.placeholder_versatile)
                         .centerCrop()
                         .into(holder.ivImage)
                 }

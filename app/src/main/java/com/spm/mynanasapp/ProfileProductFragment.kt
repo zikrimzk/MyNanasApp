@@ -7,12 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
 import com.spm.mynanasapp.data.model.entity.Product
 import com.spm.mynanasapp.data.model.request.GetProductRequest
@@ -57,11 +59,26 @@ class ProfileProductFragment : Fragment() {
         val btnAdd = view.findViewById<Button>(R.id.btn_add_product)
         btnAdd.setOnClickListener { navigateToAddProduct() }
 
-        // 3. Load Data
+        // 3. Setup Swipe Refresh
+        val swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        swipeRefresh.setColorSchemeResources(R.color.gov_orange_primary)
+        swipeRefresh.setOnRefreshListener {
+            loadProductsFromApi()
+        }
+
+        // 4. Load Data
         loadProductsFromApi()
     }
 
     private fun loadProductsFromApi() {
+        val swipeRefresh = view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+
+        // Show Progress Bar only if NOT pulling to refresh
+        if (swipeRefresh?.isRefreshing == false) {
+            progressBar?.visibility = View.VISIBLE
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
@@ -82,6 +99,10 @@ class ProfileProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+            } finally {
+                // Stop animations
+                progressBar?.visibility = View.GONE
+                swipeRefresh?.isRefreshing = false
             }
         }
     }
@@ -92,22 +113,6 @@ class ProfileProductFragment : Fragment() {
             .replace(R.id.nav_host_fragment, EntrepreneurAddProductFragment())
             .addToBackStack(null)
             .commit()
-    }
-
-    private fun loadData() {
-        productList.clear()
-
-        productList.add(Product(1, "MD2 Pineapple Grade A", "Fresh", 100, "Kg", 12.50, 1, null, 1, 1, "2025-01", "2025-01"))
-        productList.add(Product(2, "Pineapple Jam", "Sweet", 50, "Jar", 8.90, 1, null, 1, 1, "2025-02", "2025-02"))
-        productList.add(Product(1, "MD2 Pineapple Grade A", "Fresh", 100, "Kg", 12.50, 1, null, 1, 1, "2025-01", "2025-01"))
-        productList.add(Product(2, "Pineapple Jam", "Sweet", 50, "Jar", 8.90, 1, null, 1, 1, "2025-02", "2025-02"))
-        productList.add(Product(1, "MD2 Pineapple Grade A", "Fresh", 100, "Kg", 12.50, 1, null, 1, 1, "2025-01", "2025-01"))
-        productList.add(Product(2, "Pineapple Jam", "Sweet", 50, "Jar", 8.90, 1, null, 1, 1, "2025-02", "2025-02"))
-        productList.add(Product(1, "MD2 Pineapple Grade A", "Fresh", 100, "Kg", 12.50, 1, null, 1, 1, "2025-01", "2025-01"))
-        productList.add(Product(2, "Pineapple Jam", "Sweet", 50, "Jar", 8.90, 1, null, 1, 1, "2025-02", "2025-02"))
-
-        adapter.notifyDataSetChanged()
-        checkEmptyState()
     }
 
     private fun confirmDelete(product: Product) {

@@ -19,11 +19,20 @@ import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.spm.mynanasapp.data.model.request.GetUsersRequest
 import com.spm.mynanasapp.data.network.RetrofitClient
 import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.launch
 
 class EntrepreneurProfileFragment : Fragment() {
+
+    private lateinit var tvStatPosts: TextView
+    private lateinit var tvStatProducts: TextView
+    private lateinit var tvStatPineapples: TextView
+    private lateinit var tvToolbarUsername: TextView
+    private lateinit var tvFullName: TextView
+    private lateinit var tvBio: TextView
+    private lateinit var ivProfile: ImageView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,19 +45,85 @@ class EntrepreneurProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Setup ViewPager and Tabs
+        // 1. Initialize View References
+        initViews(view)
+
+        // 2. Setup ViewPager and Tabs
         setupTabs(view)
 
-        // 2. Initialize UI with Session Data
-        setupProfileData(view)
+        // 3. Populate Initial Data from Local Session (Fast)
+        displayLocalData()
 
-        // 3. Setup Click Listeners (Search, Logout, Edit)
+        // 4. Setup Click Listeners (Search, Logout, Edit)
         setupClickListeners(view)
+    }
+
+    private fun initViews(view: View) {
+        tvToolbarUsername = view.findViewById(R.id.tv_toolbar_username)
+        tvFullName = view.findViewById(R.id.tv_fullname)
+        tvBio = view.findViewById(R.id.tv_bio)
+        ivProfile = view.findViewById(R.id.iv_profile)
+        tvStatPosts = view.findViewById(R.id.tv_stat_posts)
+        tvStatProducts = view.findViewById(R.id.tv_stat_products)
+        tvStatPineapples = view.findViewById(R.id.tv_stat_pineapples)
     }
 
     override fun onResume() {
         super.onResume()
         (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(true)
+
+        refreshProfileData()
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun displayLocalData() {
+        val currentUser = SessionManager.getUser(requireContext()) ?: return
+
+        tvToolbarUsername.text = currentUser.ent_username
+        tvFullName.text = currentUser.ent_fullname
+        tvBio.text = currentUser.ent_bio ?: "No bio available."
+
+        tvStatPosts.text = currentUser.total_posts.toString()
+        tvStatProducts.text = currentUser.total_products.toString()
+        tvStatPineapples.text = currentUser.total_likes.toString()
+
+        if (!currentUser.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser.ent_profilePhoto
+            Glide.with(this).
+                load(fullUrl).
+                placeholder(R.drawable.placeholder_versatile).
+                into(ivProfile)
+        }
+    }
+
+    private fun refreshProfileData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val context = context ?: return@launch
+            val token = SessionManager.getToken(context) ?: return@launch
+            val currentUser = SessionManager.getUser(context) ?: return@launch
+
+            // Request logic: "Get Specific User" -> "Me"
+            val request = GetUsersRequest(specific_user = true, entID = currentUser.entID)
+
+            try {
+                // We reuse the getSpecificUser endpoint we made for the Public Profile
+                val response = RetrofitClient.instance.getSpecificUser("Bearer $token", request)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val freshUser = response.body()!!.data
+
+                    if (freshUser != null) {
+                        // 1. Update Session Manager (So other fragments get new data too)
+                        SessionManager.saveUser(context, freshUser)
+
+                        // 2. Update UI
+                        displayLocalData()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "Failed to refresh stats", e)
+            }
+        }
     }
 
     private fun setupTabs(view: View) {
@@ -78,40 +153,6 @@ class EntrepreneurProfileFragment : Fragment() {
                 }
             }
         }.attach()
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun setupProfileData(view: View) {
-        // Get User Session
-        val currentUser = SessionManager.getUser(requireContext())
-
-        // Find Views (Based on new XML Layout)
-        val tvToolbarUsername = view.findViewById<TextView>(R.id.tv_toolbar_username)
-        val tvFullName = view.findViewById<TextView>(R.id.tv_fullname)
-        val tvBio = view.findViewById<TextView>(R.id.tv_bio)
-        val ivProfile = view.findViewById<ImageView>(R.id.iv_profile)
-
-        // Stats Views
-        val tvStatPosts = view.findViewById<TextView>(R.id.tv_stat_posts)
-        val tvStatProducts = view.findViewById<TextView>(R.id.tv_stat_products)
-        val tvStatPineapples = view.findViewById<TextView>(R.id.tv_stat_pineapples)
-
-        // Populate Data
-        // If username is null, fallback to "Entrepreneur"
-        tvToolbarUsername.text = currentUser?.ent_username ?: "Entrepreneur"
-        tvFullName.text = currentUser?.ent_fullname ?: "MyNanas User"
-        tvBio.text = currentUser?.ent_bio ?: "No bio available."
-        if (!currentUser?.ent_profilePhoto.isNullOrEmpty()) {
-            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser?.ent_profilePhoto
-            Glide.with(this)
-                .load(fullUrl)
-                .placeholder(R.drawable.ic_launcher_background) // Replace with your default avatar
-                .into(ivProfile)
-        }
-
-        tvStatPosts.text = currentUser?.total_posts.toString()
-        tvStatProducts.text = currentUser?.total_products.toString()
-        tvStatPineapples.text = currentUser?.total_likes.toString()
     }
 
     private fun setupClickListeners(view: View) {

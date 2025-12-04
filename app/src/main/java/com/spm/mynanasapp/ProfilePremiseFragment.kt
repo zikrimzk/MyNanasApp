@@ -7,12 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import com.spm.mynanasapp.data.model.entity.Premise
@@ -48,11 +50,26 @@ class ProfilePremiseFragment : Fragment() {
         val btnAddPinned = view.findViewById<Button>(R.id.btn_add_premise)
         btnAddPinned.setOnClickListener { navigateToRegister() }
 
-        // 3. Load Data
+        // 3. Setup Swipe Refresh
+        val swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        swipeRefresh.setColorSchemeResources(R.color.gov_orange_primary)
+        swipeRefresh.setOnRefreshListener {
+            loadPremisesFromApi()
+        }
+
+        // 4. Load Data
         loadPremisesFromApi()
     }
 
     private fun loadPremisesFromApi() {
+        val swipeRefresh = view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+
+        // Show Progress Bar only if NOT pulling to refresh
+        if (swipeRefresh?.isRefreshing == false) {
+            progressBar?.visibility = View.VISIBLE
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
@@ -70,6 +87,10 @@ class ProfilePremiseFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Failed to load premises", Toast.LENGTH_SHORT).show()
+            } finally {
+                // Stop animations
+                progressBar?.visibility = View.GONE
+                swipeRefresh?.isRefreshing = false
             }
         }
     }
@@ -84,6 +105,9 @@ class ProfilePremiseFragment : Fragment() {
     }
 
     private fun deletePremiseApi(premise: Premise) {
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+        progressBar?.visibility = View.VISIBLE // Show loading during delete
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
@@ -112,6 +136,8 @@ class ProfilePremiseFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error deleting", Toast.LENGTH_SHORT).show()
+            } finally {
+                progressBar?.visibility = View.GONE
             }
         }
     }

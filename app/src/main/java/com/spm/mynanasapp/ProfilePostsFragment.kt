@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -72,14 +73,25 @@ class ProfilePostsFragment : Fragment() {
                 .commit()
         }
 
-        // 3. Load Data
+        // 3. Setup Swipe Refresh
+        val swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        swipeRefresh.setColorSchemeResources(R.color.gov_orange_primary)
+        swipeRefresh.setOnRefreshListener {
+            loadPostsFromApi("All")
+        }
+
+        // 4. Load Data
         loadPostsFromApi("All")
     }
 
     private fun loadPostsFromApi(postType: String) {
-        // Safe access to SwipeRefresh (it might not exist in this fragment layout)
-        // If your SwipeRefresh is in the PARENT fragment, you might need to handle it differently.
-        // For now, we just proceed.
+        val swipeRefresh = view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+
+        // Show Progress Bar only if NOT pulling to refresh
+        if (swipeRefresh?.isRefreshing == false) {
+            progressBar?.visibility = View.VISIBLE
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -116,6 +128,10 @@ class ProfilePostsFragment : Fragment() {
                 if (isAdded) { // Only show toast if user is still here
                     Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
                 }
+            } finally {
+                // Stop animations
+                progressBar?.visibility = View.GONE
+                swipeRefresh?.isRefreshing = false
             }
         }
     }
@@ -168,6 +184,9 @@ class ProfilePostsFragment : Fragment() {
     }
 
     private fun performPostUpdate(post: Post, isDelete: Boolean) {
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+        progressBar?.visibility = View.VISIBLE // Show loading during update
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val token = SessionManager.getToken(requireContext()) ?: return@launch
@@ -189,6 +208,8 @@ class ProfilePostsFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+            } finally {
+                progressBar?.visibility = View.GONE
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.spm.mynanasapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -35,6 +36,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Locale
 import android.util.Log
+import com.bumptech.glide.Glide
 
 class EntrepreneurFeedPostFragment : Fragment() {
 
@@ -51,6 +53,7 @@ class EntrepreneurFeedPostFragment : Fragment() {
     private lateinit var mediaAdapter: MediaPreviewAdapter
     private lateinit var btnShare: TextView
     private lateinit var progressBar: View
+    private lateinit var ivAvatar: ImageView
 
     // --- LAUNCHERS ---
     private val locationPermissionRequest = registerForActivityResult(
@@ -138,8 +141,12 @@ class EntrepreneurFeedPostFragment : Fragment() {
 
         chipLocation = view.findViewById(R.id.chip_location)
         recyclerMedia = view.findViewById(R.id.recycler_selected_media)
+        ivAvatar = view.findViewById(R.id.iv_avatar)
 
-        // 2. Setup Media RecyclerView
+        // 2. Load local data
+        displayLocalData()
+
+        // 3. Setup Media RecyclerView
         mediaAdapter = MediaPreviewAdapter(selectedImageUris) { uriToRemove ->
             selectedImageUris.remove(uriToRemove)
             updateMediaPreview()
@@ -147,12 +154,12 @@ class EntrepreneurFeedPostFragment : Fragment() {
         recyclerMedia.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         recyclerMedia.adapter = mediaAdapter
 
-        // 3. Auto-Open Keyboard
+        // 4. Auto-Open Keyboard
         etCaption.requestFocus()
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(etCaption, InputMethodManager.SHOW_IMPLICIT)
 
-        // 4. Click Listeners
+        // 5. Click Listeners
         btnClose.setOnClickListener {
             hideKeyboard()
             parentFragmentManager.popBackStack()
@@ -193,10 +200,23 @@ class EntrepreneurFeedPostFragment : Fragment() {
             bottomSheet.show(parentFragmentManager, "LocationPicker")
         }
 
-        // 5. Handle Chip Close (Remove Location)
+        // 6. Handle Chip Close (Remove Location)
         chipLocation.setOnCloseIconClickListener {
             chipLocation.visibility = View.GONE
             currentLocationString = null
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun displayLocalData() {
+        val currentUser = SessionManager.getUser(requireContext()) ?: return
+
+        if (!currentUser.ent_profilePhoto.isNullOrEmpty()) {
+            val fullUrl = RetrofitClient.SERVER_IMAGE_URL + currentUser.ent_profilePhoto
+            Glide.with(this).
+            load(fullUrl).
+            placeholder(R.drawable.ic_launcher_background).
+            into(ivAvatar)
         }
     }
 

@@ -134,13 +134,15 @@
                         android:layout_height="48dp"
                         app:cardCornerRadius="24dp"
                         app:cardElevation="0dp">
+
                         <ImageView
+                            android:id="@+id/iv_avatar"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="@string/pp_image_desc"
-                            android:src="@drawable/ic_avatar_placeholder"
                             android:background="#F0F0F0"
-                            android:scaleType="centerCrop"/>
+                            android:contentDescription="@string/pp_image_desc"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_avatar_placeholder" />
                     </androidx.cardview.widget.CardView>
 
                     <EditText
