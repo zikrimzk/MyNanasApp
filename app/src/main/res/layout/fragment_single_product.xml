@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -101,7 +100,7 @@
                     android:id="@+id/tv_product_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="RM 12.50"
+                    android:text="-"
                     android:textColor="@color/gov_orange_primary"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -113,7 +112,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:lineSpacingMultiplier="1.2"
-                    android:text="Premium MD2 Pineapple Grade A (Fresh Harvest)"
+                    android:text="-"
                     android:textColor="#262626"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -146,7 +145,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:lineSpacingMultiplier="1.2"
-                            android:text="No. 123, Jalan Pineapple, Taman Buah-Buahan, 80000 Pontian, Johor, Malaysia"
+                            android:text="-"
                             android:textColor="#424242"
                             android:textSize="14sp" />
 
@@ -212,7 +211,7 @@
                         android:id="@+id/tv_seller_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Premise Name"
+                        android:text="-"
                         android:textColor="#262626"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -283,7 +282,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Fresh Pineapple"
+                            android:text="-"
                             android:textColor="#424242"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -306,7 +305,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="150 Kg"
+                            android:text="-"
                             android:textColor="#424242"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -332,7 +331,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingMultiplier="1.4"
-                    android:text="Fresh MD2 Pineapples harvested directly from our farm in Pontian. Sweet, juicy, and perfect for desserts or fresh consumption. Bulk orders available for restaurants."
+                    android:text="-"
                     android:textColor="#424242"
                     android:textSize="14sp" />
 

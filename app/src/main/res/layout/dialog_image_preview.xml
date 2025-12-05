@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- The Large Image -->
+    <ImageView
+        android:id="@+id/iv_full_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/placeholder_versatile"
+        android:contentDescription="Full size image"/>
+
+    <!-- Close Button (Top Right) -->
+    <!-- Reusing your transparent circle background for visibility -->
+    <ImageView
+        android:id="@+id/btn_close_preview"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="@drawable/bg_circle_black_transparent"
+        android:padding="6dp"
+        app:tint="@color/white"
+        android:contentDescription="Close"/>
+
+</FrameLayout>

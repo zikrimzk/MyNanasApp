@@ -261,7 +261,7 @@ class ProductImagePagerAdapter(private val imagePaths: List<String>) :
 
         Glide.with(holder.itemView.context)
             .load(fullUrl)
-            .placeholder(R.drawable.pineapple_2) // Use your placeholder image
+            .placeholder(R.drawable.placeholder_versatile) // Use your placeholder image
             .into(holder.imageView)
     }
 

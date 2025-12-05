@@ -52,7 +52,7 @@ class ProductAdapter(
 
         // 4. Load Image (Placeholder logic)
         // if (item.product_image != null) Glide...
-        holder.ivImage.setImageResource(R.drawable.pineapple_1)
+        holder.ivImage.setImageResource(R.drawable.placeholder_versatile)
         if (!item.product_image.isNullOrEmpty()) {
             try {
                 // Parse JSON String to List
@@ -65,8 +65,8 @@ class ProductAdapter(
 
                     Glide.with(holder.itemView)
                         .load(fullUrl)
-                        .placeholder(R.drawable.pineapple_1) // Loading placeholder
-                        .error(R.drawable.pineapple_1) // Error placeholder
+                        .placeholder(R.drawable.placeholder_versatile) // Loading placeholder
+                        .error(R.drawable.placeholder_versatile) // Error placeholder
                         .centerCrop()
                         .into(holder.ivImage)
                 }

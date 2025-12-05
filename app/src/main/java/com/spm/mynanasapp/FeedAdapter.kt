@@ -1,5 +1,7 @@
 package com.spm.mynanasapp
 
+import android.app.Dialog
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,9 +61,8 @@ class FeedAdapter(
         // ==========================================
         // 1. BIND BASIC TEXT DATA
         // ==========================================
-        // TODO: BACKEND - Ensure JSON response maps 'username', 'created_at', and 'caption' correctly.
         holder.tvUsername.text = post.user.ent_username
-//        holder.tvTime.text = post.created_at
+        //        holder.tvTime.text = post.created_at
         holder.tvTime.text = TimeUtils.getTimeAgo(post.created_at)
         holder.tvCaption.text = post.post_caption
         holder.tvViews.text = "${post.post_views_count} views"
@@ -83,7 +84,6 @@ class FeedAdapter(
         // ==========================================
         // 2. LOCATION LOGIC (Dynamic Visibility)
         // ==========================================
-        // TODO: DATABASE - The 'location' field should be Nullable in the DB.
         if (!post.post_location.isNullOrEmpty()) {
             holder.tvLocation.visibility = View.VISIBLE
             holder.tvLocation.text = post.post_location
@@ -150,6 +150,11 @@ class FeedAdapter(
                 // 5. Add to Layout
                 cardWrapper.addView(imageView)
                 holder.linearImagesLayout.addView(cardWrapper)
+
+                // 6. Add Click Listener for Preview
+                imageView.setOnClickListener {
+                    showImagePreview(context, fullUrl)
+                }
             }
         } else {
             holder.scrollImagesContainer.visibility = View.GONE
@@ -204,6 +209,29 @@ class FeedAdapter(
 //        posts.addAll(newPosts)
 //        notifyDataSetChanged()
 //    }
+
+    private fun showImagePreview(context: Context, imageUrl: String) {
+        // Use a full-screen theme
+        val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(R.layout.dialog_image_preview)
+
+        val ivFull = dialog.findViewById<ImageView>(R.id.iv_full_image)
+        val btnClose = dialog.findViewById<ImageView>(R.id.btn_close_preview)
+
+        // Load the image using Glide
+        Glide.with(context)
+            .load(imageUrl)
+            .placeholder(R.drawable.placeholder_versatile) // Use a loading placeholder
+            .error(android.R.drawable.stat_notify_error) // Use an error icon
+            .into(ivFull)
+
+        // Close Action
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 
 
     override fun getItemCount() = posts.size

@@ -114,7 +114,7 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Select Premise"
+                android:hint="Premise"
                 app:startIconDrawable="@drawable/ic_tab_farm"
                 app:startIconTint="@color/gov_orange_primary"
                 app:boxStrokeColor="@color/gov_orange_primary"

@@ -1,5 +1,7 @@
 package com.spm.mynanasapp
 
+import android.app.Dialog
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,12 +68,12 @@ class ProfilePostsAdapter(
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + post.user.ent_profilePhoto
             Glide.with(context)
                 .load(fullUrl)
-                .placeholder(R.drawable.placeholder_versatile) // Replace with your default avatar
+                .placeholder(R.drawable.placeholder_versatile)
                 .into(holder.tvAvatar)
         } else {
             Glide.with(context)
                 .load(R.drawable.ic_avatar_placeholder)
-                .placeholder(R.drawable.placeholder_versatile) // Replace with your default avatar
+                .placeholder(R.drawable.placeholder_versatile)
                 .into(holder.tvAvatar)
         }
 
@@ -127,20 +129,23 @@ class ProfilePostsAdapter(
                 imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                 // 3. Construct Full URL
-                // relativePath is like "posts/abc.jpg"
-                // fullUrl becomes "http://192.168.0.221/storage/posts/abc.jpg"
                 val fullUrl = SERVER_IMAGE_URL + relativePath
 
                 // 4. Load with Glide
                 Glide.with(context)
                     .load(fullUrl)
-                    .placeholder(R.drawable.placeholder_versatile) // Add a placeholder drawable
-                    .error(android.R.drawable.stat_notify_error) // Error icon
+                    .placeholder(R.drawable.placeholder_versatile)
+                    .error(android.R.drawable.stat_notify_error)
                     .into(imageView)
 
                 // 5. Add to Layout
                 cardWrapper.addView(imageView)
                 holder.linearImagesLayout.addView(cardWrapper)
+
+                // 6. Add Click Listener for Preview
+                imageView.setOnClickListener {
+                    showImagePreview(context, fullUrl)
+                }
             }
         } else {
             holder.scrollImagesContainer.visibility = View.GONE
@@ -202,6 +207,29 @@ class ProfilePostsAdapter(
             }
             popup.show()
         }
+    }
+
+    private fun showImagePreview(context: Context, imageUrl: String) {
+        // Use a full-screen theme
+        val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(R.layout.dialog_image_preview)
+
+        val ivFull = dialog.findViewById<ImageView>(R.id.iv_full_image)
+        val btnClose = dialog.findViewById<ImageView>(R.id.btn_close_preview)
+
+        // Load the image using Glide
+        Glide.with(context)
+            .load(imageUrl)
+            .placeholder(R.drawable.placeholder_versatile)
+            .error(android.R.drawable.stat_notify_error)
+            .into(ivFull)
+
+        // Close Action
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun getItemCount() = posts.size
