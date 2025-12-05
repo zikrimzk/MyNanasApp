@@ -17,11 +17,17 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
+import com.spm.mynanasapp.EntrepreneurEditProductFragment.ProductImage
 import com.spm.mynanasapp.data.model.entity.Product
 import com.spm.mynanasapp.data.model.request.GetProductRequest
 import com.spm.mynanasapp.data.network.RetrofitClient
+import com.spm.mynanasapp.utils.FileUtils
 import com.spm.mynanasapp.utils.SessionManager
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class ProfileProductFragment : Fragment() {
 
@@ -118,17 +124,67 @@ class ProfileProductFragment : Fragment() {
             .commit()
     }
 
+    private fun performDelete(product: Product) {
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progress_bar)
+        progressBar?.visibility = View.VISIBLE
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val context = requireContext()
+            val token = SessionManager.getToken(context) ?: return@launch
+
+            // 1. Minimum Required Fields for Delete
+            val rbId = product.productID.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val rbIsDelete = "1".toRequestBody("text/plain".toMediaTypeOrNull())
+
+            // Send dummy/null for other required fields to satisfy Retrofit signature,
+            // BUT your PHP validation says 'sometimes|required', so null is fine for update logic if is_delete is true.
+            // However, since Retrofit @Part parameters are non-nullable in your interface (except the ones marked ?),
+            // you might need to pass null if your interface allows it, or dummy RequestBody.
+
+            // Assuming your Interface uses nullable RequestBody? for optional fields:
+            try {
+                val response = RetrofitClient.instance.updateProduct(
+                    token = "Bearer $token",
+                    id = rbId,
+                    isDelete = rbIsDelete,
+                    name = null, // Backend ignores these if is_delete=1
+                    desc = null,
+                    categoryId = null,
+                    qty = null,
+                    unit = null,
+                    price = null,
+                    premiseId = null,
+                    existing_images = emptyList(),
+                    new_images = emptyList()
+                )
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    Toast.makeText(context, "Product Deleted", Toast.LENGTH_SHORT).show()
+
+                    // Update Local List
+                    val index = productList.indexOfFirst { it.productID == product.productID }
+                    if (index != -1) {
+                        productList.removeAt(index)
+                        adapter.notifyItemRemoved(index)
+                        checkEmptyState()
+                    }
+                } else {
+                    Toast.makeText(context, response.body()?.message ?: "Failed", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                progressBar?.visibility = View.GONE
+            }
+        }
+    }
+
     private fun confirmDelete(product: Product) {
         AlertDialog.Builder(requireContext())
             .setTitle("Delete Product")
             .setMessage("Remove ${product.product_name} from your list?")
             .setPositiveButton("Delete") { _, _ ->
-                val index = productList.indexOf(product)
-                if (index != -1) {
-                    productList.removeAt(index)
-                    adapter.notifyItemRemoved(index)
-                    checkEmptyState()
-                }
+                performDelete(product)
             }
             .setNegativeButton("Cancel", null)
             .show()

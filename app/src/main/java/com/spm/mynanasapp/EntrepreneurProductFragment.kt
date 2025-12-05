@@ -218,7 +218,7 @@ class EntrepreneurProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 // Silent failure or log error
-                Toast.makeText(requireContext(), "Failed to load categories", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(requireContext(), "Failed to load categories", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -279,7 +279,7 @@ class EntrepreneurProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 context?.let { ctx ->
-                    Toast.makeText(ctx, "Network Error", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(ctx, "Network Error", Toast.LENGTH_SHORT).show()
                 }
             } finally {
                 swipeRefresh?.isRefreshing = false

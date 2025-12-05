@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -37,6 +38,8 @@ class EntrepreneurEditPremiseFragment : Fragment() {
     private lateinit var tilPostcode: TextInputLayout
     private lateinit var containerLandSize: LinearLayout
     private lateinit var etLandSize: TextInputEditText
+    private lateinit var loadingOverlay: View
+
     private var currentPremise: Premise? = null
 
     // Location Data
@@ -72,6 +75,7 @@ class EntrepreneurEditPremiseFragment : Fragment() {
         tilPostcode = view.findViewById(R.id.til_postcode)
         containerLandSize = view.findViewById(R.id.container_land_size)
         etLandSize = view.findViewById(R.id.et_land_size)
+        loadingOverlay = view.findViewById(R.id.layout_loading_overlay)
 
         val btnBack = view.findViewById<ImageView>(R.id.btn_back)
         val btnSave = view.findViewById<ImageView>(R.id.btn_save)
@@ -94,6 +98,14 @@ class EntrepreneurEditPremiseFragment : Fragment() {
 
         btnDelete.setOnClickListener {
             showDeleteConfirmation()
+        }
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        } else {
+            loadingOverlay.visibility = View.GONE
         }
     }
 
@@ -126,6 +138,8 @@ class EntrepreneurEditPremiseFragment : Fragment() {
     }
 
     private fun performUpdate(isDelete: Boolean) {
+        setLoading(true)
+
         val premise = currentPremise ?: return
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -155,6 +169,8 @@ class EntrepreneurEditPremiseFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
+            } finally {
+                setLoading(false)
             }
         }
     }

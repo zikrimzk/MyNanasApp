@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,6 +53,7 @@ class EntrepreneurEditProductFragment : Fragment() {
     private lateinit var etQty: TextInputEditText
     private lateinit var etPrice: TextInputEditText
     private lateinit var etDesc: TextInputEditText
+    private lateinit var loadingOverlay: View
 
     // Data
     private var currentProduct: Product? = null
@@ -109,6 +111,7 @@ class EntrepreneurEditProductFragment : Fragment() {
         etQty = view.findViewById(R.id.et_quantity)
         etPrice = view.findViewById(R.id.et_price)
         etDesc = view.findViewById(R.id.et_description)
+        loadingOverlay = view.findViewById(R.id.layout_loading_overlay)
 
         // 2. Setup Dropdowns
         setupDropdowns()
@@ -125,6 +128,14 @@ class EntrepreneurEditProductFragment : Fragment() {
         btnDelete.setOnClickListener { showDeleteConfirmation() }
     }
 
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        } else {
+            loadingOverlay.visibility = View.GONE
+        }
+    }
+
     private fun setupImageRecyclerView() {
         imagesAdapter = MixedImagePreviewAdapter(imageList) { item ->
             imageList.remove(item)
@@ -135,6 +146,8 @@ class EntrepreneurEditProductFragment : Fragment() {
     }
 
     private fun loadApiDataAndPopulate() {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
             try {
@@ -161,6 +174,8 @@ class EntrepreneurEditProductFragment : Fragment() {
 
             } catch (e: Exception) {
                 Log.e("EditProduct", "Error loading data", e)
+            } finally {
+                setLoading(false)
             }
         }
     }
@@ -233,6 +248,8 @@ class EntrepreneurEditProductFragment : Fragment() {
     }
 
     private fun performUpdate(name: String, qty: String, price: String, isDelete: Boolean) {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val context = requireContext()
             val token = SessionManager.getToken(context) ?: return@launch
@@ -299,6 +316,8 @@ class EntrepreneurEditProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                setLoading(false)
             }
         }
     }

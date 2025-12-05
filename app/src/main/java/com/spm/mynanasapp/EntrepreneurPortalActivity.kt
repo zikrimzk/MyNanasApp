@@ -5,24 +5,31 @@ import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.activity.OnBackPressedCallback
 
 class EntrepreneurPortalActivity : AppCompatActivity() {
+    private var backPressedTime: Long = 0
+    private var currentTab: String = "home" // Track the current active tab
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_entrepreneur_portal)
 
         setupEdgeToEdgeFix()
+        setupBackPressHandler()
 
         if (savedInstanceState == null) {
             loadFragment(EntrepreneurFeedFragment())
             updateNavColors("home")
+            currentTab = "home"
         }
 
         val btnHome = findViewById<FrameLayout>(R.id.nav_btn_home)
@@ -32,16 +39,19 @@ class EntrepreneurPortalActivity : AppCompatActivity() {
         btnHome.setOnClickListener {
             loadFragment(EntrepreneurFeedFragment())
             updateNavColors("home")
+            currentTab = "home"
         }
 
         btnProducts.setOnClickListener {
              loadFragment(EntrepreneurProductFragment())
             updateNavColors("products")
+            currentTab = "products"
         }
 
         btnProfile.setOnClickListener {
              loadFragment(EntrepreneurProfileFragment())
             updateNavColors("profile")
+            currentTab = "profile"
         }
     }
 
@@ -87,5 +97,38 @@ class EntrepreneurPortalActivity : AppCompatActivity() {
         if (bottomNav != null) {
             bottomNav.visibility = if (isVisible) android.view.View.VISIBLE else android.view.View.GONE
         }
+    }
+
+    private fun setupBackPressHandler() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // A. If there are fragments in the back stack (e.g., Edit Profile, Add Product), pop them first
+                if (supportFragmentManager.backStackEntryCount > 0) {
+                    supportFragmentManager.popBackStack()
+
+                    // If we just popped the last item, ensure Bottom Nav is visible again
+                    if (supportFragmentManager.backStackEntryCount == 1) {
+                        setBottomNavVisibility(true)
+                    }
+                    return
+                }
+
+                // B. If we are NOT on the Home Tab, go to Home Tab
+                if (currentTab != "home") {
+                    loadFragment(EntrepreneurFeedFragment())
+                    updateNavColors("home")
+                    currentTab = "home"
+                    return
+                }
+
+                // C. If we ARE on Home Tab, handle Double Click to Exit
+                if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                    finish() // Close the app
+                } else {
+                    Toast.makeText(this@EntrepreneurPortalActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                    backPressedTime = System.currentTimeMillis()
+                }
+            }
+        })
     }
 }

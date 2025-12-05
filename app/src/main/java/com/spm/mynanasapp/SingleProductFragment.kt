@@ -51,6 +51,7 @@ class SingleProductFragment : Fragment() {
     private lateinit var tvStock: TextView    // New View
     private lateinit var vpImageGallery: ViewPager2
     private lateinit var tabIndicator: TabLayout
+    private lateinit var loadingOverlay: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +83,8 @@ class SingleProductFragment : Fragment() {
         tvStock = view.findViewById(R.id.tv_stock)
         vpImageGallery = view.findViewById(R.id.vp_image_gallery) // NEW ViewPager
         tabIndicator = view.findViewById(R.id.tab_indicator)
+        loadingOverlay = view.findViewById(R.id.layout_loading_overlay)
+
 
         val btnBack = view.findViewById<ImageView>(R.id.btn_back)
         val btnCall = view.findViewById<MaterialButton>(R.id.btn_call)
@@ -97,6 +100,14 @@ class SingleProductFragment : Fragment() {
         }
     }
 
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        } else {
+            loadingOverlay.visibility = View.GONE
+        }
+    }
+
     private fun bindData() {
         val product = currentProduct ?: return
         val seller = product.premise?.user
@@ -104,7 +115,7 @@ class SingleProductFragment : Fragment() {
 
         // --- 1. Bind Text Data ---
         tvName.text = product.product_name
-        tvDescription.text = product.product_desc
+        tvDescription.text = product.product_desc ?: "No description available."
 
         val format = NumberFormat.getCurrencyInstance(Locale("ms", "MY"))
         tvPrice.text = format.format(product.product_price)
@@ -192,6 +203,7 @@ class SingleProductFragment : Fragment() {
     }
 
     private fun loadProductDetails() {
+        setLoading(true)
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
@@ -213,6 +225,8 @@ class SingleProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+            } finally {
+                setLoading(false)
             }
         }
     }

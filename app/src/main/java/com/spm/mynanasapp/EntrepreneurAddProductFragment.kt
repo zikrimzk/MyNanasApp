@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,11 +37,12 @@ class EntrepreneurAddProductFragment : Fragment() {
     private lateinit var actvUnit: AutoCompleteTextView
     private lateinit var recyclerImages: RecyclerView
     private lateinit var tvWarning: TextView
-
-    private val selectedImageUris = mutableListOf<Uri>()
     private lateinit var imagesAdapter: SmallImagePreviewAdapter
+    private lateinit var loadingOverlay: View
+
 
     // Data Holders
+    private val selectedImageUris = mutableListOf<Uri>()
     private var myPremises = listOf<Premise>()
     private var selectedPremiseID: Long? = null
 
@@ -83,6 +85,7 @@ class EntrepreneurAddProductFragment : Fragment() {
         actvUnit = view.findViewById(R.id.actv_unit)
         recyclerImages = view.findViewById(R.id.recycler_product_images)
         tvWarning = view.findViewById(R.id.tv_no_premise_warning)
+        loadingOverlay = view.findViewById(R.id.layout_loading_overlay)
 
         val etName = view.findViewById<TextInputEditText>(R.id.et_product_name)
         val etPrice = view.findViewById<TextInputEditText>(R.id.et_price)
@@ -143,7 +146,17 @@ class EntrepreneurAddProductFragment : Fragment() {
         }
     }
 
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        } else {
+            loadingOverlay.visibility = View.GONE
+        }
+    }
+
     private fun loadCategoriesFromApi() {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
             try {
@@ -162,11 +175,15 @@ class EntrepreneurAddProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("AddProduct", "Error loading categories", e)
+            } finally {
+                setLoading(false)
             }
         }
     }
 
     private fun loadPremises() {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
             try {
@@ -195,11 +212,15 @@ class EntrepreneurAddProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("AddProduct", "Error loading premises", e)
+            } finally {
+                setLoading(false)
             }
         }
     }
 
     private fun performAddProduct(name: String, desc: String, catId: Long, qty: String, unit: String, price: String) {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val context = requireContext()
             val token = SessionManager.getToken(context) ?: return@launch
@@ -240,6 +261,8 @@ class EntrepreneurAddProductFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                setLoading(false)
             }
         }
     }

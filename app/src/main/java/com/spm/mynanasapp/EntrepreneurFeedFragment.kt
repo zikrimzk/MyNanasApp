@@ -202,8 +202,8 @@ class EntrepreneurFeedFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 // === NETWORK ERROR ===
-                Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.e("EntrepreneurFeedFragment", "Network Error: ${e.message}", e)
+//                Toast.makeText(context, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+//                Log.e("EntrepreneurFeedFragment", "Network Error: ${e.message}", e)
             } finally {
                 // Stop the loading spinner
                 swipeRefresh?.isRefreshing = false

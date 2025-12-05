@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +31,7 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
     private lateinit var actvCity: AutoCompleteTextView
     private lateinit var actvPostcode: AutoCompleteTextView
     private lateinit var containerLandSize: LinearLayout
+    private lateinit var loadingOverlay: View
 
     // DATA HOLDERS
     private var stateList: List<StateItem> = emptyList()
@@ -60,6 +62,7 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
         actvCity = view.findViewById(R.id.actv_city)
         actvPostcode = view.findViewById(R.id.actv_postcode)
         containerLandSize = view.findViewById(R.id.container_land_size)
+        loadingOverlay = view.findViewById(R.id.layout_loading_overlay)
 
         // 2. Setup Premise Type (Farm vs Shop)
         val types = listOf("Farm", "Shop/Kiosk")
@@ -98,10 +101,20 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
         }
     }
 
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loadingOverlay.visibility = View.VISIBLE
+        } else {
+            loadingOverlay.visibility = View.GONE
+        }
+    }
+
     private fun performAddPremise(
         type: String, name: String, address: String,
         state: String, city: String, postcode: String, landsize: String
     ) {
+        setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             val token = SessionManager.getToken(requireContext()) ?: return@launch
 
@@ -127,6 +140,8 @@ class EntrepreneurRegisterPremiseFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                setLoading(false)
             }
         }
     }
