@@ -1,23 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#757575"
-        android:strokeWidth="2"
-        android:pathData="M12,22c-3.5,0 -6,-3.5 -6,-8c0,-3 2,-6 6,-8c4,2 6,5 6,8C18,18.5 15.5,22 12,22z"/>
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#757575"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:pathData="M12,6 C12,6 10,2 7,2 M12,6 C12,6 14,2 17,2 M12,6 V2"/>
+
+    <!-- CROWN (Leaves) -->
+    <!-- Designed as a closed shape so it matches the filled version perfectly -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#757575"
         android:strokeWidth="1.5"
-        android:pathData="M9,12l6,4 M15,12l-6,4"/>
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,8.5 L10.5,6.5 L7,4 L9.5,7.5 L11,7 L12,2 L13,7 L14.5,7.5 L17,4 L13.5,6.5 Z"/>
+
+    <!-- BODY (Fruit) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#757575"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,22 C15.5,22 18,19 18,15 C18,11.5 15.5,9 12,9 C8.5,9 6,11.5 6,15 C6,19 8.5,22 12,22 Z"/>
 </vector>

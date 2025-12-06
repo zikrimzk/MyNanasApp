@@ -177,29 +177,26 @@ class SingleProductFragment : Fragment() {
 
         view?.findViewById<View>(R.id.container_seller)?.setOnClickListener {
             if (seller != null) {
-                // 1. Create Fragment instance
                 val publicProfile = EntrepreneurPublicProfileFragment.newInstance(
                     userId = seller.entID,
                     username = seller.ent_username,
                     fullname = seller.ent_fullname
                 )
 
-                // 2. Perform Transaction with Animation
                 parentFragmentManager.beginTransaction()
                     .setCustomAnimations(
-                        R.anim.slide_in_right,  // Enter
-                        R.anim.slide_out_left,  // Exit
-                        R.anim.slide_in_left,   // Pop Enter (Back)
-                        R.anim.slide_out_right  // Pop Exit (Back)
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_right
                     )
                     .replace(R.id.nav_host_fragment, publicProfile)
                     .addToBackStack(null)
                     .commit()
             } else {
-                Toast.makeText(context, "Seller information unavailable", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Entrepreneur information unavailable", Toast.LENGTH_SHORT).show()
             }
         }
-            // Navigate to Seller Profile
     }
 
     private fun loadProductDetails() {
