@@ -126,7 +126,7 @@ class ProfilePostsFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 if (isAdded) { // Only show toast if user is still here
-                    Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Connection Error", Toast.LENGTH_SHORT).show()
                 }
             } finally {
                 // Stop animations
@@ -207,7 +207,7 @@ class ProfilePostsFragment : Fragment() {
                     Toast.makeText(context, "Update failed", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
             } finally {
                 progressBar?.visibility = View.GONE
             }
@@ -250,7 +250,7 @@ class ProfilePostsFragment : Fragment() {
             } catch (e: Exception) {
                 // Network Error: Revert UI
                 revertLikeState(post)
-                Toast.makeText(context, "Connection error", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Connection error", Toast.LENGTH_SHORT).show()
             }
         }
     }

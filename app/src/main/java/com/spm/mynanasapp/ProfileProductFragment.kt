@@ -104,10 +104,10 @@ class ProfileProductFragment : Fragment() {
                     adapter.notifyDataSetChanged()
                     checkEmptyState()
                 } else {
-                    Toast.makeText(context, "Failed to load products", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Failed to load products", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
             } finally {
                 // Stop animations
                 progressBar?.visibility = View.GONE

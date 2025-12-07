@@ -86,7 +86,7 @@ class ProfilePremiseFragment : Fragment() {
                     checkEmptyState()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Failed to load premises", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Failed to load premises", Toast.LENGTH_SHORT).show()
             } finally {
                 // Stop animations
                 progressBar?.visibility = View.GONE
