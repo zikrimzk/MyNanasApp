@@ -26,14 +26,14 @@
             android:id="@+id/iv_login_logo"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:src="@drawable/jata_malaysia"
+            android:src="@drawable/mynanas_logo_2"
             tools:ignore="ContentDescription" />
 
         <TextView
             android:id="@+id/tv_login_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="10dp"
             android:text="Welcome back"
             android:textColor="@color/text_header"
             android:textSize="24sp"

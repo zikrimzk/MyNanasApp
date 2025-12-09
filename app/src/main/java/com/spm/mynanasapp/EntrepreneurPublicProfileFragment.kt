@@ -69,7 +69,7 @@ class EntrepreneurPublicProfileFragment : Fragment() {
         // 2. Bind Data
         tvToolbarUsername.text = "@${username ?: "User"}"
         tvFullName.text = fullname ?: "Entrepreneur"
-        tvCategory.text = "Entrepreneur" // Default until loaded
+        tvCategory.text = "Entrepreneur"
         loadUserProfile()
 
         // 3. Back Action
@@ -140,7 +140,6 @@ class EntrepreneurPublicProfileFragment : Fragment() {
     // --- HIDE BOTTOM NAV LOGIC ---
     override fun onResume() {
         super.onResume()
-        // Always hide bottom bar when viewing a public profile
         (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(false)
     }
 

@@ -152,11 +152,6 @@ class SearchEntrepreneurFragment : Fragment() {
         (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(false)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(true)
-    }
-
     private fun hideKeyboard() {
         val view = activity?.currentFocus
         if (view != null) {

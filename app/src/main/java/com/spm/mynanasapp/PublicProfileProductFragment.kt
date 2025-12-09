@@ -103,11 +103,15 @@ class PublicProfileProductFragment : Fragment() {
         if (!isAdded || view == null) return
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_profile_products)
         val emptyLayout = view?.findViewById<View>(R.id.layout_empty_placeholder)
+        val btnaction = view?.findViewById<MaterialButton>(R.id.btn_tab_action)
+
 
         if (productList.isEmpty()) {
             // === STATE: EMPTY ===
             recyclerView?.visibility = View.GONE
             emptyLayout?.visibility = View.VISIBLE
+            btnaction?.visibility = View.GONE
+
 
             // Customize Placeholder Content
             val tvTitle = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_title)
@@ -122,6 +126,7 @@ class PublicProfileProductFragment : Fragment() {
             // === STATE: HAS DATA ===
             emptyLayout?.visibility = View.GONE
             recyclerView?.visibility = View.VISIBLE
+            btnaction?.visibility = View.GONE
         }
     }
 }

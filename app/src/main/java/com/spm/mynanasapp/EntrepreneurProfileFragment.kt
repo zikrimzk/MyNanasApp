@@ -79,7 +79,7 @@ class EntrepreneurProfileFragment : Fragment() {
     private fun displayLocalData() {
         val currentUser = SessionManager.getUser(requireContext()) ?: return
 
-        tvToolbarUsername.text = currentUser.ent_username
+        tvToolbarUsername.text = "@${currentUser.ent_username ?: "User"}"
         tvFullName.text = currentUser.ent_fullname
         tvBio.text = currentUser.ent_bio ?: "No bio available."
 

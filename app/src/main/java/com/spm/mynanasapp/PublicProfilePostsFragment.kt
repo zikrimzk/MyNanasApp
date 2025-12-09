@@ -138,14 +138,12 @@ class PublicProfilePostsFragment : Fragment() {
         if (!isAdded || view == null) return
         val recyclerView = view?.findViewById<View>(R.id.recycler_profile_posts)
         val emptyLayout = view?.findViewById<View>(R.id.layout_empty_placeholder)
+        val btnaction = view?.findViewById<MaterialButton>(R.id.btn_tab_action)
 
         if (postsForAdapter.isEmpty()) {
-            // === CASE: NO POSTS ===
-            // Hide the list and the pinned button (to avoid duplicates)
             recyclerView?.visibility = View.GONE
-
-            // Show the placeholder
             emptyLayout?.visibility = View.VISIBLE
+            btnaction?.visibility = View.GONE
 
             // Configure Placeholder Content
             val tvTitle = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_title)
@@ -157,11 +155,9 @@ class PublicProfilePostsFragment : Fragment() {
             ivIcon?.setImageResource(R.drawable.ic_tab_posts)
 
         } else {
-            // === CASE: HAS POSTS ===
-            // Show list and pinned button
             recyclerView?.visibility = View.VISIBLE
-            // Hide placeholder
             emptyLayout?.visibility = View.GONE
+            btnaction?.visibility = View.GONE
         }
     }
 

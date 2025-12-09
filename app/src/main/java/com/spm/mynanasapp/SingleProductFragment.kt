@@ -233,11 +233,7 @@ class SingleProductFragment : Fragment() {
         super.onResume()
         (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(false)
     }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        (activity as? EntrepreneurPortalActivity)?.setBottomNavVisibility(true)
-    }
+    
 
     companion object {
         fun newInstance(id: Long, name: String, price: Double) =

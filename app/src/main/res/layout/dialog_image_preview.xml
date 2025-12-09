@@ -21,7 +21,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_gravity="top|end"
-        android:layout_margin="16dp"
+        android:layout_margin="20dp"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
         android:background="@drawable/bg_circle_black_transparent"
         android:padding="6dp"

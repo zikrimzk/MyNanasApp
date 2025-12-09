@@ -99,17 +99,16 @@ class PublicProfilePremiseFragment : Fragment() {
         if (!isAdded || view == null) return
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_premises)
         val emptyLayout = view?.findViewById<View>(R.id.layout_empty_view)
+        val btnaction = emptyLayout?.findViewById<MaterialButton>(R.id.btn_tab_action)
 
         if (premiseList.isEmpty()) {
-            // === STATE: EMPTY ===
             recyclerView?.visibility = View.GONE
             emptyLayout?.visibility = View.VISIBLE
+            btnaction?.visibility = View.GONE
 
-            // Customize Placeholder Content
             val tvTitle = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_title)
             val tvDesc = emptyLayout?.findViewById<TextView>(R.id.tv_placeholder_desc)
             val ivIcon = emptyLayout?.findViewById<ImageView>(R.id.iv_placeholder_icon)
-            val btnPlaceholder = emptyLayout?.findViewById<MaterialButton>(R.id.btn_tab_action)
 
             tvTitle?.text = "No Premises Registered"
             tvDesc?.text = "There are no premise registered by this user."
@@ -119,6 +118,8 @@ class PublicProfilePremiseFragment : Fragment() {
             // === STATE: HAS DATA ===
             emptyLayout?.visibility = View.GONE
             recyclerView?.visibility = View.VISIBLE
+            btnaction?.visibility = View.GONE
+
         }
     }
 }
