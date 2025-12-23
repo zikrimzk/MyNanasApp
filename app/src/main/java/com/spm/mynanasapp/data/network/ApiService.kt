@@ -1,5 +1,6 @@
 package com.spm.mynanasapp.data.network
 
+import com.google.gson.JsonElement
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.model.entity.Premise
 import com.spm.mynanasapp.data.model.entity.Product
@@ -72,7 +73,7 @@ interface ApiService {
     suspend fun verifyPost(
         @Header("Authorization") token: String,
         @Path("id") postId: Long
-    ): Response<BaseResponse<String?>>
+    ): Response<BaseResponse<JsonElement?>>
 
     // 2. Get Single Public Profile
     @POST("get_users")
