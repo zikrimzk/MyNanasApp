@@ -59,7 +59,8 @@ class ProfilePostsFragment : Fragment() {
             // New: Like Logic
             onLikeClick = { post -> togglePostLikeApi(post) },
             // New: View Logic
-            onViewPost = { post -> incrementViewCountApi(post) }
+            onViewPost = { post -> incrementViewCountApi(post) },
+            onVerifyClick = { post -> verifyPost(post) }
         )
         recyclerView.adapter = adapter
 
@@ -82,6 +83,28 @@ class ProfilePostsFragment : Fragment() {
 
         // 4. Load Data
         loadPostsFromApi("All")
+    }
+
+    private fun verifyPost(post: Post) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            try {
+                val response = RetrofitClient.instance.verifyPost("Bearer $token", post.postID)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                }
+
+                loadPostsFromApi("All")
+            } catch (e: Exception) {
+                Toast.makeText(context, "Connection or Server Error", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
     private fun loadPostsFromApi(postType: String) {

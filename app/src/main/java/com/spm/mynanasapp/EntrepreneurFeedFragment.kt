@@ -1,6 +1,9 @@
 package com.spm.mynanasapp
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,11 +14,20 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.tabs.TabLayout
@@ -31,6 +43,9 @@ import kotlinx.coroutines.launch
 import com.spm.mynanasapp.data.model.entity.Post
 import com.spm.mynanasapp.data.model.request.LikePostRequest
 import com.spm.mynanasapp.data.model.request.ViewPostRequest
+import com.spm.mynanasapp.worker.DailyNotificationWorker
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 class EntrepreneurFeedFragment : Fragment() {
 
@@ -95,7 +110,85 @@ class EntrepreneurFeedFragment : Fragment() {
         // 5. Load Data
         // Now this is safe to call because feedAdapter is initialized above
         loadPostsFromApi("All")
+        checkAndScheduleTask();
     }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            scheduleDailyNotification() // Proceed to schedule if granted
+        } else {
+            Toast.makeText(requireContext(), "Permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun checkAndScheduleTask() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    requireContext(), Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    scheduleDailyNotification()
+                }
+                else -> {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            // Android 12 or below doesn't need runtime permission
+            scheduleDailyNotification()
+        }
+    }
+
+    private fun scheduleDailyNotification() {
+//        val constraints = Constraints.Builder()
+//            .setRequiredNetworkType(NetworkType.CONNECTED)
+//            .build()
+//
+//        // Use OneTimeWorkRequest to trigger it "now"
+//        val immediateRequest = OneTimeWorkRequestBuilder<DailyNotificationWorker>()
+//            .setConstraints(constraints)
+//            .build()
+//
+//        WorkManager.getInstance(requireContext()).enqueueUniqueWork(
+//            "ImmediatePostUpdate",
+//            ExistingWorkPolicy.REPLACE, // REPLACE ensures it runs now even if one is pending
+//            immediateRequest
+//        )
+
+        val currentDate = Calendar.getInstance()
+        val dueDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 9)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+
+        // If it's already past 9 AM today, schedule for 9 AM tomorrow
+        if (dueDate.before(currentDate)) {
+            dueDate.add(Calendar.HOUR_OF_DAY, 24)
+        }
+
+        val initialDelay = dueDate.timeInMillis - currentDate.timeInMillis
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val dailyWorkRequest = PeriodicWorkRequestBuilder<DailyNotificationWorker>(
+            24, TimeUnit.HOURS // Repeat every 24 hours
+        )
+            .setConstraints(constraints)
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS) // Wait until 9 AM
+            .build()
+
+        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+            "DailyNineAMUpdate",
+            ExistingPeriodicWorkPolicy.UPDATE, // Updates the schedule if it exists
+            dailyWorkRequest
+        )
+    }
+
 
     private fun setupProfileData(view: View) {
         // Get User Session

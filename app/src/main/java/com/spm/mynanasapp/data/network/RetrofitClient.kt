@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     // 1. DEFINE YOUR URL
-//    private const val BASE_URL = "http://192.168.0.5:8000/api/"
+    //private const val BASE_URL = "http://10.0.2.2:8000"
     private const val BASE_URL = "https://mynanas.appnest.my"
 
     private const val API_URL = BASE_URL + "/api/"
@@ -35,7 +35,7 @@ object RetrofitClient {
             val original = chain.request()
             val requestBuilder = original.newBuilder()
                 .addHeader("Accept", "application/json")
-//                .addHeader("Content-Type", "application/json")
+                .addHeader("Content-Type", "application/json")
 
             // === CRITICAL STEP: Add Bearer Token if it exists ===
             if (!authToken.isNullOrEmpty()) {

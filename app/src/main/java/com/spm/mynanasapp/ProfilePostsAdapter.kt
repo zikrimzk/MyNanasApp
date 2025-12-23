@@ -24,7 +24,8 @@ class ProfilePostsAdapter(
     private val onEditClick: (Post) -> Unit,
     private val onDeleteClick: (Post) -> Unit,
     private val onLikeClick: (Post) -> Unit,
-    private val onViewPost: (Post) -> Unit
+    private val onViewPost: (Post) -> Unit,
+    private val onVerifyClick: (Post) -> Unit
 ) : RecyclerView.Adapter<ProfilePostsAdapter.ViewHolder>() {
 
     private val SERVER_IMAGE_URL = RetrofitClient.SERVER_IMAGE_URL
@@ -190,6 +191,11 @@ class ProfilePostsAdapter(
         holder.btnMore.setOnClickListener { view ->
             val popup = PopupMenu(view.context, view)
             popup.menu.add("Edit Post")
+
+            if(post.post_verified_At.isNullOrEmpty()){
+                popup.menu.add("Verify Post")
+
+            }
             popup.menu.add("Delete Post")
 
             popup.setOnMenuItemClickListener { item ->
@@ -201,6 +207,10 @@ class ProfilePostsAdapter(
                     "Delete Post" -> {
                         // Pass the current post object back to Fragment
                         onDeleteClick(post)
+                    }
+
+                    "Verify Post" -> {
+                        onVerifyClick(post)
                     }
                 }
                 true
