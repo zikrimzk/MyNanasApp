@@ -2,6 +2,8 @@ package com.spm.mynanasapp
 
 import android.app.Dialog
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,7 +39,7 @@ class ProfilePostsAdapter(
         val tvLocation: TextView = itemView.findViewById(R.id.tv_location)
         val tvCaption: TextView = itemView.findViewById(R.id.tv_caption)
         val tvAvatar: ImageView = itemView.findViewById(R.id.iv_avatar)
-
+        val tvStatusBadge: TextView = itemView.findViewById(R.id.tv_status_badge)
 
         val scrollImagesContainer: View = itemView.findViewById(R.id.scroll_images_container)
         val linearImagesLayout: LinearLayout = itemView.findViewById(R.id.layout_images_linear)
@@ -64,6 +66,18 @@ class ProfilePostsAdapter(
         holder.tvCaption.text = post.post_caption
         holder.tvViews.text = "${post.post_views_count} views"
         holder.tvLikes.text = post.post_likes_count.toString()
+
+        if (!post.post_verified_at.isNullOrEmpty()) {
+            // Verified: Green
+            holder.tvStatusBadge.text = "Verified"
+            holder.tvStatusBadge.setTextColor(Color.parseColor("#2E7D32"))
+            holder.tvStatusBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#E8F5E9"))
+        } else {
+            // Unverified: Red
+            holder.tvStatusBadge.text = "Unverified"
+            holder.tvStatusBadge.setTextColor(Color.parseColor("#C62828"))
+            holder.tvStatusBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FFEBEE"))
+        }
 
         if (!post.user.ent_profilePhoto.isNullOrEmpty()) {
             val fullUrl = RetrofitClient.SERVER_IMAGE_URL + post.user.ent_profilePhoto
@@ -192,7 +206,7 @@ class ProfilePostsAdapter(
             val popup = PopupMenu(view.context, view)
             popup.menu.add("Edit Post")
 
-            if(post.post_verified_At.isNullOrEmpty()){
+            if(post.post_verified_at.isNullOrEmpty()){
                 popup.menu.add("Verify Post")
 
             }

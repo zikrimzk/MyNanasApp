@@ -55,6 +55,13 @@ class EntrepreneurPortalActivity : AppCompatActivity() {
         }
     }
 
+    fun redirectToProfile() {
+        loadFragment(EntrepreneurProfileFragment())
+        updateNavColors("profile")
+        currentTab = "profile"
+        setBottomNavVisibility(true) // Ensure nav is visible
+    }
+
     private fun loadFragment(fragment: Fragment): Boolean {
         supportFragmentManager.beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)

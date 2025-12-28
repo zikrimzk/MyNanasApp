@@ -68,6 +68,21 @@
                 android:textSize="12sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/tv_status_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:textAllCaps="true"
+                android:background="@drawable/bg_status_badge"
+                tools:text="Verified"
+                tools:textColor="#2E7D32"
+                tools:backgroundTint="#E8F5E9" />
         </LinearLayout>
 
         <TextView

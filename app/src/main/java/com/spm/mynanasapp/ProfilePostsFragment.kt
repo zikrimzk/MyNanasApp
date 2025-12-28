@@ -225,6 +225,7 @@ class ProfilePostsFragment : Fragment() {
 
                 if (response.isSuccessful && response.body()?.status == true) {
                     Toast.makeText(context, response.body()!!.message, Toast.LENGTH_SHORT).show()
+                    post.post_verified_at = null;
                     handleLocalListUpdate(post, isDelete)
                 } else {
                     Toast.makeText(context, "Update failed", Toast.LENGTH_SHORT).show()

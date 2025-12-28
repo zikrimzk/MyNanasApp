@@ -23,6 +23,6 @@ data class Post(
 
     val user: User,
 
-    val post_verified_At: String?,
+    var post_verified_at: String?,
     val post_verification: String?
 )

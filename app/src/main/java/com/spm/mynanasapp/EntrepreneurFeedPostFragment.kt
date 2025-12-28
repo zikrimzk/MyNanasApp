@@ -37,6 +37,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Locale
 import android.util.Log
 import com.bumptech.glide.Glide
+import com.spm.mynanasapp.data.model.entity.Post
 
 class EntrepreneurFeedPostFragment : Fragment() {
 
@@ -207,6 +208,29 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
     }
 
+
+    private suspend fun verifyPost(post: Long) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val token = SessionManager.getToken(requireContext()) ?: return@launch
+
+            try {
+                val response = RetrofitClient.instance.verifyPost("Bearer $token", post)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, response.body()?.message, Toast.LENGTH_SHORT).show()
+                }
+
+                //loadPostsFromApi("All")
+            } catch (e: Exception) {
+                Toast.makeText(context, "Connection or Server Error during verification post", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    }
+
     @SuppressLint("SetTextI18n")
     private fun displayLocalData() {
         val currentUser = SessionManager.getUser(requireContext()) ?: return
@@ -354,7 +378,14 @@ class EntrepreneurFeedPostFragment : Fragment() {
 
                         // Success! Close the screen
                         hideKeyboard()
-                        parentFragmentManager.popBackStack()
+
+                        val postId = baseResponse.data?.postID?:0
+                        verifyPost(postId)
+
+                        withContext(Dispatchers.Main) {
+                            parentFragmentManager.popBackStack()
+                            (activity as? EntrepreneurPortalActivity)?.redirectToProfile()
+                        }
                     } else {
                         val msg = baseResponse?.message ?: "Upload failed"
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
