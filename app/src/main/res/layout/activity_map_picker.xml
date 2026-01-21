@@ -15,28 +15,48 @@
         android:background="@android:color/white"
         android:elevation="4dp">
 
-        <Button
+        <TextView
             android:id="@+id/btn_back"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:text="←"
-            android:textSize="18sp"
-            android:background="@android:color/transparent"
+            android:textSize="35sp"
+            android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:onClick="finish"/>
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
 
-        <EditText
-            android:id="@+id/et_search"
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:hint="Search location..."
-            android:singleLine="true"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:paddingStart="16dp"
-            android:background="@drawable/edittext_rounded"/>
+            android:layout_marginStart="8dp">
+
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Search location..."
+                android:singleLine="true"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:paddingStart="16dp"
+                android:background="@drawable/edittext_rounded"/>
+
+            <!-- Suggestions RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_suggestions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/top_bar"
+                android:background="@android:color/white"
+                android:elevation="8dp"
+                android:visibility="gone"
+                android:maxHeight="200dp"/>
+
+        </FrameLayout>
 
         <Button
             android:id="@+id/btn_select"
@@ -54,5 +74,4 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
-
 </LinearLayout>
