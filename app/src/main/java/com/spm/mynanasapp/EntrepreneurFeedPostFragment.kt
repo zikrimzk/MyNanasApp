@@ -191,13 +191,15 @@ class EntrepreneurFeedPostFragment : Fragment() {
         }
 
         btnAddLocation.setOnClickListener {
-            val bottomSheet = LocationPickerBottomSheet { selectedCity ->
-                if (selectedCity == null) {
-                    checkAndRequestLocation()
-                } else {
-                    setLocationUI(selectedCity)
+            val bottomSheet = LocationPickerBottomSheet.create(
+                onLocationSelected = { selectedCity ->
+                    if (selectedCity == null) {
+                        checkAndRequestLocation()
+                    } else {
+                        setLocationUI(selectedCity)
+                    }
                 }
-            }
+            )
             bottomSheet.show(parentFragmentManager, "LocationPicker")
         }
 
